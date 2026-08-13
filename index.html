@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>XSee — Feed Algorithm Simulator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <span class="topbar-name">XSee</span>
+    <span class="topbar-sub">Feed Algorithm Simulator</span>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab tab--active" role="tab" aria-selected="true" data-tab="simulator">Simulator</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="weights">Weights</button>
+  </nav>
+
+  <main>
+    <!-- ============ SIMULATOR ============ -->
+    <section id="panel-simulator" class="panel" role="tabpanel">
+      <div class="layout">
+        <aside class="controls">
+          <h2 class="section-title">Account</h2>
+          <div class="field">
+            <label for="followers">Followers</label>
+            <input type="number" id="followers" min="0" max="100000000" value="1250">
+          </div>
+          <div class="field">
+            <label for="following">Following</label>
+            <input type="number" id="following" min="0" max="100000000" value="480">
+          </div>
+
+          <h2 class="section-title">Feed</h2>
+          <div class="field">
+            <label for="postCount">Candidate posts <output id="postCountValue">30</output></label>
+            <input type="range" id="postCount" min="10" max="100" step="5" value="30">
+          </div>
+
+          <h2 class="section-title">Negative feedback rates</h2>
+          <div class="field">
+            <label for="rateReport">Report <output id="rateReportValue">0.2%</output></label>
+            <input type="range" id="rateReport" min="0" max="100" step="1" value="4">
+          </div>
+          <div class="field">
+            <label for="rateBlock">Block <output id="rateBlockValue">0.5%</output></label>
+            <input type="range" id="rateBlock" min="0" max="100" step="1" value="10">
+          </div>
+          <div class="field">
+            <label for="rateMute">Mute <output id="rateMuteValue">0.5%</output></label>
+            <input type="range" id="rateMute" min="0" max="100" step="1" value="10">
+          </div>
+          <div class="field">
+            <label for="rateNotInterested">Not interested <output id="rateNotInterestedValue">1.0%</output></label>
+            <input type="range" id="rateNotInterested" min="0" max="100" step="1" value="20">
+          </div>
+
+          <div class="actions">
+            <button id="randomizeRates" class="btn btn--secondary">Randomize rates</button>
+            <button id="run" class="btn btn--primary">Run simulation</button>
+          </div>
+        </aside>
+
+        <div class="results">
+          <div class="stats" id="stats" hidden>
+            <div class="stat"><span class="stat-label">Shown</span><span class="stat-value" id="statShown">–</span></div>
+            <div class="stat"><span class="stat-label">Suppressed</span><span class="stat-value" id="statSuppressed">–</span></div>
+            <div class="stat"><span class="stat-label">In-network</span><span class="stat-value" id="statInNetwork">–</span></div>
+            <div class="stat"><span class="stat-label">Median score</span><span class="stat-value" id="statMedian">–</span></div>
+          </div>
+          <div id="feed" class="feed">
+            <p class="empty">Run a simulation to rank a candidate feed.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ WEIGHTS ============ -->
+    <section id="panel-weights" class="panel" role="tabpanel" hidden>
+      <div class="weights-layout" id="weightsRoot"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
