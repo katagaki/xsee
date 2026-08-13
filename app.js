@@ -1,43 +1,185 @@
 "use strict";
 
 /* ------------------------------------------------------------------ *
+ * Localization
+ * ------------------------------------------------------------------ */
+const STRINGS = {
+  en: {
+    "app.subtitle": "Feed Algorithm Simulator",
+    "tab.simulator": "Simulator",
+    "tab.weights": "Weights",
+    "section.account": "Account",
+    "section.feed": "Feed",
+    "section.rates": "Negative feedback rates",
+    "field.followers": "Followers",
+    "field.following": "Following",
+    "field.postCount": "Candidate posts",
+    "rate.block": "Block",
+    "rate.mute": "Mute",
+    "button.randomize": "Randomize rates",
+    "button.run": "Run simulation",
+    "stat.shown": "Shown",
+    "stat.suppressed": "Suppressed",
+    "stat.inNetwork": "In-network",
+    "stat.median": "Median score",
+    "feed.empty": "Run a simulation to rank a candidate feed.",
+    "meta.inNetwork": "In network",
+    "meta.outNetwork": "Out of network",
+    "meta.mutual": "Mutual",
+    "media.text": "Text",
+    "media.photo": "Photo",
+    "media.video": "Video",
+    "media.link": "Link",
+    "post.score": "score",
+    "post.suppressed": "suppressed",
+    "action.favorite": "Favorite",
+    "action.reply": "Reply",
+    "action.retweet": "Repost",
+    "action.quote": "Quote",
+    "action.share": "Share",
+    "action.shareDm": "Share via DM",
+    "action.shareCopyLink": "Share via copy link",
+    "action.followAuthor": "Follow author",
+    "action.click": "Click",
+    "action.openLink": "Open link",
+    "action.photoExpand": "Photo expand",
+    "action.videoOpen": "Video open",
+    "action.vqv": "Quality video view",
+    "action.quotedClick": "Quoted post click",
+    "action.profileClick": "Profile click",
+    "action.dwell": "Dwell",
+    "action.notDwelled": "Not dwelled",
+    "action.blockAuthor": "Block author",
+    "action.notInterested": "Not interested",
+    "action.muteAuthor": "Mute author",
+    "action.report": "Report",
+    "mod.bidiReplyBoost": "Mutual-follow reply boost",
+    "mod.oonFactor": "Out-of-network factor",
+    "mod.topicOonFactor": "Topic out-of-network factor",
+    "mod.authorDecay": "Author diversity decay",
+    "mod.authorFloor": "Author diversity floor",
+    "mod.unexplored": "Unexplored post weight",
+    "mod.contDwellTime": "Continuous dwell time",
+    "weights.groupPositive": "Positive engagement",
+    "weights.groupNegative": "Negative feedback",
+    "weights.groupModifiers": "Modifiers",
+    "weights.colAction": "Action",
+    "weights.colWeight": "Weight",
+    "weights.notePositive": "Each predicted action probability is multiplied by its weight; the sum ranks the post.",
+    "weights.noteNegative": "A single likely report outweighs hundreds of likely favorites.",
+    "weights.noteModifiers": "Applied after the weighted sum: network origin, mutual follows, and author repetition scale the final score.",
+  },
+  ja: {
+    "app.subtitle": "フィードアルゴリズムシミュレーター",
+    "tab.simulator": "シミュレーター",
+    "tab.weights": "重み",
+    "section.account": "アカウント",
+    "section.feed": "フィード",
+    "section.rates": "ネガティブフィードバック率",
+    "field.followers": "フォロワー",
+    "field.following": "フォロー中",
+    "field.postCount": "候補ポスト数",
+    "rate.block": "ブロック",
+    "rate.mute": "ミュート",
+    "button.randomize": "率をランダム化",
+    "button.run": "シミュレーション実行",
+    "stat.shown": "表示",
+    "stat.suppressed": "抑制",
+    "stat.inNetwork": "ネットワーク内",
+    "stat.median": "スコア中央値",
+    "feed.empty": "シミュレーションを実行して候補フィードをランク付けします。",
+    "meta.inNetwork": "ネットワーク内",
+    "meta.outNetwork": "ネットワーク外",
+    "meta.mutual": "相互フォロー",
+    "media.text": "テキスト",
+    "media.photo": "画像",
+    "media.video": "動画",
+    "media.link": "リンク",
+    "post.score": "スコア",
+    "post.suppressed": "抑制",
+    "action.favorite": "いいね",
+    "action.reply": "返信",
+    "action.retweet": "リポスト",
+    "action.quote": "引用",
+    "action.share": "共有",
+    "action.shareDm": "DMで共有",
+    "action.shareCopyLink": "リンクのコピーで共有",
+    "action.followAuthor": "作成者をフォロー",
+    "action.click": "クリック",
+    "action.openLink": "リンクを開く",
+    "action.photoExpand": "画像を拡大",
+    "action.videoOpen": "動画を開く",
+    "action.vqv": "動画の視聴",
+    "action.quotedClick": "引用元のクリック",
+    "action.profileClick": "プロフィールのクリック",
+    "action.dwell": "滞在",
+    "action.notDwelled": "滞在なし",
+    "action.blockAuthor": "作成者をブロック",
+    "action.notInterested": "興味がない",
+    "action.muteAuthor": "作成者をミュート",
+    "action.report": "報告",
+    "mod.bidiReplyBoost": "相互フォロー返信ブースト",
+    "mod.oonFactor": "ネットワーク外係数",
+    "mod.topicOonFactor": "トピックネットワーク外係数",
+    "mod.authorDecay": "作成者多様性の減衰",
+    "mod.authorFloor": "作成者多様性の下限",
+    "mod.unexplored": "未探索ポストの重み",
+    "mod.contDwellTime": "継続滞在時間",
+    "weights.groupPositive": "ポジティブエンゲージメント",
+    "weights.groupNegative": "ネガティブフィードバック",
+    "weights.groupModifiers": "修飾係数",
+    "weights.colAction": "アクション",
+    "weights.colWeight": "重み",
+    "weights.notePositive": "各アクションの予測確率に重みを掛け、その合計でポストをランク付けします。",
+    "weights.noteNegative": "1件の報告の見込みは、数百件のいいねの見込みを上回ります。",
+    "weights.noteModifiers": "加重合計の後に適用されます。ネットワークの内外、相互フォロー、作成者の重複が最終スコアを調整します。",
+  },
+};
+
+let lang = localStorage.getItem("lang");
+if (lang !== "en" && lang !== "ja") {
+  lang = (navigator.language || "en").toLowerCase().startsWith("ja") ? "ja" : "en";
+}
+const t = (key) => (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.en[key] || key;
+
+/* ------------------------------------------------------------------ *
  * Scoring weights, sourced from the public feed ranking configuration
  * (home-mixer/params/param.rs).
  * ------------------------------------------------------------------ */
 const WEIGHTS = {
   positive: [
-    { key: "favorite",      label: "Favorite",            value: 0.5 },
-    { key: "reply",         label: "Reply",               value: 5.0 },
-    { key: "retweet",       label: "Repost",              value: 1.0 },
-    { key: "quote",         label: "Quote",               value: 5.0 },
-    { key: "share",         label: "Share",               value: 2.0 },
-    { key: "shareDm",       label: "Share via DM",        value: 5.0 },
-    { key: "shareCopyLink", label: "Share via copy link", value: 20.0 },
-    { key: "followAuthor",  label: "Follow author",       value: 4.0 },
-    { key: "click",         label: "Click",               value: 0.4 },
-    { key: "openLink",      label: "Open link",           value: 0.2 },
-    { key: "photoExpand",   label: "Photo expand",        value: 0.05 },
-    { key: "videoOpen",     label: "Video open",          value: 0.05 },
-    { key: "vqv",           label: "Quality video view",  value: 0.05 },
-    { key: "quotedClick",   label: "Quoted post click",   value: 0.05 },
-    { key: "profileClick",  label: "Profile click",       value: 0.0 },
-    { key: "dwell",         label: "Dwell",               value: 0.0 },
+    { key: "favorite",      value: 0.5 },
+    { key: "reply",         value: 5.0 },
+    { key: "retweet",       value: 1.0 },
+    { key: "quote",         value: 5.0 },
+    { key: "share",         value: 2.0 },
+    { key: "shareDm",       value: 5.0 },
+    { key: "shareCopyLink", value: 20.0 },
+    { key: "followAuthor",  value: 4.0 },
+    { key: "click",         value: 0.4 },
+    { key: "openLink",      value: 0.2 },
+    { key: "photoExpand",   value: 0.05 },
+    { key: "videoOpen",     value: 0.05 },
+    { key: "vqv",           value: 0.05 },
+    { key: "quotedClick",   value: 0.05 },
+    { key: "profileClick",  value: 0.0 },
+    { key: "dwell",         value: 0.0 },
   ],
   negative: [
-    { key: "notDwelled",    label: "Not dwelled",    value: -0.02 },
-    { key: "blockAuthor",   label: "Block author",   value: -31.2 },
-    { key: "notInterested", label: "Not interested", value: -43.2 },
-    { key: "muteAuthor",    label: "Mute author",    value: -58.8 },
-    { key: "report",        label: "Report",         value: -234.0 },
+    { key: "notDwelled",    value: -0.02 },
+    { key: "blockAuthor",   value: -31.2 },
+    { key: "notInterested", value: -43.2 },
+    { key: "muteAuthor",    value: -58.8 },
+    { key: "report",        value: -234.0 },
   ],
   modifiers: [
-    { key: "bidiReplyBoost", label: "Mutual-follow reply boost",   value: 15.0 },
-    { key: "oonFactor",      label: "Out-of-network factor",       value: 0.75 },
-    { key: "topicOonFactor", label: "Topic out-of-network factor", value: 0.5 },
-    { key: "authorDecay",    label: "Author diversity decay",      value: 0.5 },
-    { key: "authorFloor",    label: "Author diversity floor",      value: 0.25 },
-    { key: "unexplored",     label: "Unexplored post weight",      value: 0.02 },
-    { key: "contDwellTime",  label: "Continuous dwell time",       value: 0.004 },
+    { key: "bidiReplyBoost", value: 15.0 },
+    { key: "oonFactor",      value: 0.75 },
+    { key: "topicOonFactor", value: 0.5 },
+    { key: "authorDecay",    value: 0.5 },
+    { key: "authorFloor",    value: 0.25 },
+    { key: "unexplored",     value: 0.02 },
+    { key: "contDwellTime",  value: 0.004 },
   ],
 };
 
@@ -46,6 +188,8 @@ for (const group of [WEIGHTS.positive, WEIGHTS.negative, WEIGHTS.modifiers]) {
   for (const w of group) W[w.key] = w.value;
 }
 
+const actionLabel = (key) => t("action." + key);
+
 /* ------------------------------------------------------------------ *
  * Random number generator (seeded per run so a run is reproducible
  * while it is on screen).
@@ -53,9 +197,9 @@ for (const group of [WEIGHTS.positive, WEIGHTS.negative, WEIGHTS.modifiers]) {
 function mulberry32(seed) {
   return function () {
     seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    let t2 = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t2 = (t2 + Math.imul(t2 ^ (t2 >>> 7), 61 | t2)) ^ t2;
+    return ((t2 ^ (t2 >>> 14)) >>> 0) / 4294967296;
   };
 }
 
@@ -64,7 +208,7 @@ function mulberry32(seed) {
  * ------------------------------------------------------------------ */
 const HANDLE_A = ["aria", "kite", "nova", "moss", "juno", "vex", "lumen", "orbit", "pixel", "quill", "sable", "tidal", "umber", "wren", "zephyr", "cinder"];
 const HANDLE_B = ["dev", "art", "lab", "hq", "io", "jp", "za", "works", "daily", "club", "zone", "net", "fm", "co", "gg", "one"];
-const MEDIA = ["Text", "Photo", "Video", "Link"];
+const MEDIA = ["text", "photo", "video", "link"];
 
 function makeAuthor(rand, mutualProb) {
   return {
@@ -104,10 +248,10 @@ function simulate(config) {
     p.shareCopyLink = rand() * 0.004 * affinity;
     p.followAuthor  = inNetwork ? 0 : rand() * 0.008 * affinity;
     p.click         = rand() * 0.25 * affinity;
-    p.openLink      = media === "Link" ? rand() * 0.10 * affinity : 0;
-    p.photoExpand   = media === "Photo" ? rand() * 0.12 * affinity : 0;
-    p.videoOpen     = media === "Video" ? rand() * 0.12 * affinity : 0;
-    p.vqv           = media === "Video" ? rand() * 0.15 * affinity : 0;
+    p.openLink      = media === "link" ? rand() * 0.10 * affinity : 0;
+    p.photoExpand   = media === "photo" ? rand() * 0.12 * affinity : 0;
+    p.videoOpen     = media === "video" ? rand() * 0.12 * affinity : 0;
+    p.vqv           = media === "video" ? rand() * 0.15 * affinity : 0;
     p.quotedClick   = rand() * 0.02 * affinity;
     p.profileClick  = rand() * 0.03 * affinity;
     p.dwell         = rand() * 0.5;
@@ -150,15 +294,13 @@ function simulate(config) {
  * Rendering
  * ------------------------------------------------------------------ */
 const $ = (id) => document.getElementById(id);
-const fmt = (n, d = 2) => n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmt = (n, d = 2) => n.toLocaleString(lang === "ja" ? "ja-JP" : "en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 const pct = (n) => (n * 100).toFixed(n * 100 >= 10 ? 0 : 1) + "%";
 
-const ACTION_LABELS = {};
-for (const group of [WEIGHTS.positive, WEIGHTS.negative]) {
-  for (const w of group) ACTION_LABELS[w.key] = w.label;
-}
+let lastPosts = null;
 
 function renderFeed(posts) {
+  lastPosts = posts;
   const feed = $("feed");
   feed.textContent = "";
 
@@ -193,9 +335,9 @@ function renderFeed(posts) {
     const metaEl = document.createElement("span");
     metaEl.className = "post-meta";
     metaEl.textContent = [
-      post.inNetwork ? "In network" : "Out of network",
-      post.author.mutual ? "Mutual" : null,
-      post.media,
+      post.inNetwork ? t("meta.inNetwork") : t("meta.outNetwork"),
+      post.author.mutual ? t("meta.mutual") : null,
+      t("media." + post.media),
     ].filter(Boolean).join(" · ");
     head.append(authorEl, metaEl);
 
@@ -223,7 +365,7 @@ function renderFeed(posts) {
     for (const [key, c] of top) {
       const chip = document.createElement("span");
       if (c < 0) chip.className = "neg";
-      chip.textContent = ACTION_LABELS[key] + " " + (c >= 0 ? "+" : "−") + fmt(Math.abs(c));
+      chip.textContent = actionLabel(key) + " " + (c >= 0 ? "+" : "−") + fmt(Math.abs(c));
       actions.append(chip);
     }
 
@@ -236,7 +378,7 @@ function renderFeed(posts) {
     scoreVal.textContent = fmt(post.score);
     const scoreLabel = document.createElement("span");
     scoreLabel.className = "post-score-label";
-    scoreLabel.textContent = post.score < 0 ? "suppressed" : "score";
+    scoreLabel.textContent = post.score < 0 ? t("post.suppressed") : t("post.score");
     scoreEl.append(scoreVal, scoreLabel);
 
     el.append(rank, main, scoreEl);
@@ -249,10 +391,11 @@ function renderFeed(posts) {
  * ------------------------------------------------------------------ */
 function renderWeights() {
   const root = $("weightsRoot");
+  root.textContent = "";
   const groups = [
-    { title: "Positive engagement", rows: WEIGHTS.positive, note: "Each predicted action probability is multiplied by its weight; the sum ranks the post." },
-    { title: "Negative feedback", rows: WEIGHTS.negative, note: "A single likely report outweighs hundreds of likely favorites." },
-    { title: "Modifiers", rows: WEIGHTS.modifiers, note: "Applied after the weighted sum: network origin, mutual follows, and author repetition scale the final score." },
+    { title: t("weights.groupPositive"), rows: WEIGHTS.positive, prefix: "action.", note: t("weights.notePositive") },
+    { title: t("weights.groupNegative"), rows: WEIGHTS.negative, prefix: "action.", note: t("weights.noteNegative") },
+    { title: t("weights.groupModifiers"), rows: WEIGHTS.modifiers, prefix: "mod.", note: t("weights.noteModifiers") },
   ];
 
   for (const group of groups) {
@@ -268,10 +411,10 @@ function renderWeights() {
     table.className = "wtable";
     const thead = document.createElement("thead");
     const headRow = document.createElement("tr");
-    for (const t of ["Action", "", "Weight"]) {
+    for (const text of [t("weights.colAction"), "", t("weights.colWeight")]) {
       const th = document.createElement("th");
-      th.textContent = t;
-      if (t === "") th.className = "wbar-cell";
+      th.textContent = text;
+      if (text === "") th.className = "wbar-cell";
       headRow.append(th);
     }
     thead.append(headRow);
@@ -281,7 +424,7 @@ function renderWeights() {
     for (const row of sorted) {
       const tr = document.createElement("tr");
       const name = document.createElement("td");
-      name.textContent = row.label;
+      name.textContent = t(group.prefix + row.key);
 
       const barCell = document.createElement("td");
       barCell.className = "wbar-cell";
@@ -311,6 +454,30 @@ function renderWeights() {
     root.append(section);
   }
 }
+
+/* ------------------------------------------------------------------ *
+ * Language switching
+ * ------------------------------------------------------------------ */
+function applyLanguage() {
+  document.documentElement.lang = lang;
+  document.title = "XSee — " + t("app.subtitle");
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll(".lang-btn").forEach((btn) => {
+    btn.classList.toggle("lang-btn--active", btn.dataset.lang === lang);
+  });
+  renderWeights();
+  if (lastPosts) renderFeed(lastPosts);
+}
+
+document.querySelectorAll(".lang-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    lang = btn.dataset.lang;
+    localStorage.setItem("lang", lang);
+    applyLanguage();
+  });
+});
 
 /* ------------------------------------------------------------------ *
  * Controls
@@ -359,10 +526,10 @@ function randomizeRates() {
  * ------------------------------------------------------------------ */
 document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach((t) => {
-      const active = t === tab;
-      t.classList.toggle("tab--active", active);
-      t.setAttribute("aria-selected", String(active));
+    document.querySelectorAll(".tab").forEach((other) => {
+      const active = other === tab;
+      other.classList.toggle("tab--active", active);
+      other.setAttribute("aria-selected", String(active));
     });
     document.querySelectorAll(".panel").forEach((p) => {
       p.hidden = p.id !== "panel-" + tab.dataset.tab;
@@ -374,6 +541,6 @@ document.querySelectorAll('input[type="range"]').forEach((el) => el.addEventList
 $("run").addEventListener("click", run);
 $("randomizeRates").addEventListener("click", randomizeRates);
 
+applyLanguage();
 updateRateOutputs();
-renderWeights();
 run();

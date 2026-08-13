@@ -9,12 +9,16 @@
 <body>
   <header class="topbar">
     <span class="topbar-name">XSee</span>
-    <span class="topbar-sub">Feed Algorithm Simulator</span>
+    <span class="topbar-sub" data-i18n="app.subtitle">Feed Algorithm Simulator</span>
+    <div class="lang" role="group" aria-label="Language">
+      <button class="lang-btn" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="ja">日本語</button>
+    </div>
   </header>
 
   <nav class="tabs" role="tablist">
-    <button class="tab tab--active" role="tab" aria-selected="true" data-tab="simulator">Simulator</button>
-    <button class="tab" role="tab" aria-selected="false" data-tab="weights">Weights</button>
+    <button class="tab tab--active" role="tab" aria-selected="true" data-tab="simulator" data-i18n="tab.simulator">Simulator</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="weights" data-i18n="tab.weights">Weights</button>
   </nav>
 
   <main>
@@ -22,55 +26,55 @@
     <section id="panel-simulator" class="panel" role="tabpanel">
       <div class="layout">
         <aside class="controls">
-          <h2 class="section-title">Account</h2>
+          <h2 class="section-title" data-i18n="section.account">Account</h2>
           <div class="field">
-            <label for="followers">Followers</label>
+            <label for="followers" data-i18n="field.followers">Followers</label>
             <input type="number" id="followers" min="0" max="100000000" value="1250">
           </div>
           <div class="field">
-            <label for="following">Following</label>
+            <label for="following" data-i18n="field.following">Following</label>
             <input type="number" id="following" min="0" max="100000000" value="480">
           </div>
 
-          <h2 class="section-title">Feed</h2>
+          <h2 class="section-title" data-i18n="section.feed">Feed</h2>
           <div class="field">
-            <label for="postCount">Candidate posts <output id="postCountValue">30</output></label>
+            <label for="postCount"><span data-i18n="field.postCount">Candidate posts</span> <output id="postCountValue">30</output></label>
             <input type="range" id="postCount" min="10" max="100" step="5" value="30">
           </div>
 
-          <h2 class="section-title">Negative feedback rates</h2>
+          <h2 class="section-title" data-i18n="section.rates">Negative feedback rates</h2>
           <div class="field">
-            <label for="rateReport">Report <output id="rateReportValue">0.010%</output></label>
+            <label for="rateReport"><span data-i18n="action.report">Report</span> <output id="rateReportValue">0.010%</output></label>
             <input type="range" id="rateReport" min="0" max="100" step="1" value="2">
           </div>
           <div class="field">
-            <label for="rateBlock">Block <output id="rateBlockValue">0.020%</output></label>
+            <label for="rateBlock"><span data-i18n="rate.block">Block</span> <output id="rateBlockValue">0.020%</output></label>
             <input type="range" id="rateBlock" min="0" max="100" step="1" value="4">
           </div>
           <div class="field">
-            <label for="rateMute">Mute <output id="rateMuteValue">0.020%</output></label>
+            <label for="rateMute"><span data-i18n="rate.mute">Mute</span> <output id="rateMuteValue">0.020%</output></label>
             <input type="range" id="rateMute" min="0" max="100" step="1" value="4">
           </div>
           <div class="field">
-            <label for="rateNotInterested">Not interested <output id="rateNotInterestedValue">0.050%</output></label>
+            <label for="rateNotInterested"><span data-i18n="action.notInterested">Not interested</span> <output id="rateNotInterestedValue">0.050%</output></label>
             <input type="range" id="rateNotInterested" min="0" max="100" step="1" value="10">
           </div>
 
           <div class="actions">
-            <button id="randomizeRates" class="btn btn--secondary">Randomize rates</button>
-            <button id="run" class="btn btn--primary">Run simulation</button>
+            <button id="randomizeRates" class="btn btn--secondary" data-i18n="button.randomize">Randomize rates</button>
+            <button id="run" class="btn btn--primary" data-i18n="button.run">Run simulation</button>
           </div>
         </aside>
 
         <div class="results">
           <div class="stats" id="stats" hidden>
-            <div class="stat"><span class="stat-label">Shown</span><span class="stat-value" id="statShown">–</span></div>
-            <div class="stat"><span class="stat-label">Suppressed</span><span class="stat-value" id="statSuppressed">–</span></div>
-            <div class="stat"><span class="stat-label">In-network</span><span class="stat-value" id="statInNetwork">–</span></div>
-            <div class="stat"><span class="stat-label">Median score</span><span class="stat-value" id="statMedian">–</span></div>
+            <div class="stat"><span class="stat-label" data-i18n="stat.shown">Shown</span><span class="stat-value" id="statShown">–</span></div>
+            <div class="stat"><span class="stat-label" data-i18n="stat.suppressed">Suppressed</span><span class="stat-value" id="statSuppressed">–</span></div>
+            <div class="stat"><span class="stat-label" data-i18n="stat.inNetwork">In-network</span><span class="stat-value" id="statInNetwork">–</span></div>
+            <div class="stat"><span class="stat-label" data-i18n="stat.median">Median score</span><span class="stat-value" id="statMedian">–</span></div>
           </div>
           <div id="feed" class="feed">
-            <p class="empty">Run a simulation to rank a candidate feed.</p>
+            <p class="empty" data-i18n="feed.empty">Run a simulation to rank a candidate feed.</p>
           </div>
         </div>
       </div>
