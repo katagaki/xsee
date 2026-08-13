@@ -315,7 +315,7 @@ function renderWeights() {
 /* ------------------------------------------------------------------ *
  * Controls
  * ------------------------------------------------------------------ */
-const RATE_SCALE = 0.0005; // slider 0..100 -> probability 0..5%
+const RATE_SCALE = 0.00005; // slider 0..100 -> probability 0..0.5%
 const RATE_IDS = ["Report", "Block", "Mute", "NotInterested"];
 
 function readRates() {
@@ -330,7 +330,7 @@ function readRates() {
 function updateRateOutputs() {
   for (const id of RATE_IDS) {
     const v = Number($("rate" + id).value) * RATE_SCALE;
-    $("rate" + id + "Value").textContent = (v * 100).toFixed(1) + "%";
+    $("rate" + id + "Value").textContent = (v * 100).toFixed(3) + "%";
   }
   $("postCountValue").textContent = $("postCount").value;
 }
