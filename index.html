@@ -46,6 +46,20 @@
             <input type="range" id="duration" min="30" max="1440" step="30" value="120">
           </div>
 
+          <h2 class="section-title" data-i18n="section.post">Post content</h2>
+          <div class="field">
+            <label for="photos"><span data-i18n="field.photos">Photos</span> <output id="photosValue">0</output></label>
+            <input type="range" id="photos" min="0" max="4" step="1" value="0">
+          </div>
+          <div class="check">
+            <label for="hasVideo" data-i18n="field.video">Video</label>
+            <input type="checkbox" id="hasVideo">
+          </div>
+          <div class="check">
+            <label for="hasLink" data-i18n="field.link">Link</label>
+            <input type="checkbox" id="hasLink">
+          </div>
+
           <h2 class="section-title" data-i18n="section.rates">Negative feedback rates</h2>
           <div class="field">
             <label for="rateReport"><span data-i18n="action.report">Report</span> <output id="rateReportValue">0.010%</output></label>

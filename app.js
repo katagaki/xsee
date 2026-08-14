@@ -11,10 +11,14 @@ const STRINGS = {
     "section.feed": "Feed",
     "section.rates": "Negative feedback rates",
     "section.timeline": "Timeline",
+    "section.post": "Post content",
     "field.followers": "Followers",
     "field.following": "Following",
     "field.postCount": "Candidate posts",
     "field.duration": "Duration",
+    "field.photos": "Photos",
+    "field.video": "Video",
+    "field.link": "Link",
     "rate.block": "Block",
     "rate.mute": "Mute",
     "button.randomize": "Randomize rates",
@@ -83,10 +87,14 @@ const STRINGS = {
     "section.feed": "フィード",
     "section.rates": "ネガティブフィードバック率",
     "section.timeline": "タイムライン",
+    "section.post": "ポスト内容",
     "field.followers": "フォロワー",
     "field.following": "フォロー中",
     "field.postCount": "候補ポスト数",
     "field.duration": "シミュレーション時間",
+    "field.photos": "画像",
+    "field.video": "動画",
+    "field.link": "リンク",
     "rate.block": "ブロック",
     "rate.mute": "ミュート",
     "button.randomize": "率をランダム化",
@@ -244,8 +252,6 @@ const WORDS = [
   "ridge", "river", "saffron", "sage", "sparrow", "spruce", "summit", "thistle",
   "tundra", "walnut", "willow", "wren",
 ];
-const MEDIA = ["text", "photo", "video", "link"];
-
 function makeAuthor(rand, mutualProb) {
   let name = WORDS[(rand() * WORDS.length) | 0];
   if (rand() < 0.5) name += WORDS[(rand() * WORDS.length) | 0];
@@ -272,7 +278,7 @@ function generateCandidates(config) {
   for (let i = 0; i < config.postCount; i++) {
     const inNetwork = rand() < inNetworkShare;
     const author = makeAuthor(rand, inNetwork ? mutualProb : mutualProb * 0.1);
-    const media = MEDIA[(rand() * MEDIA.length) | 0];
+    const content = config.content;
     const affinity = (inNetwork ? 0.5 + rand() * 0.5 : rand() * 0.7) * audienceDamp;
 
     // Predicted per-impression probability of each engagement action.
@@ -286,10 +292,10 @@ function generateCandidates(config) {
     p.shareCopyLink = rand() * 0.004 * affinity;
     p.followAuthor  = inNetwork ? 0 : rand() * 0.008 * affinity;
     p.click         = rand() * 0.25 * affinity;
-    p.openLink      = media === "link" ? rand() * 0.10 * affinity : 0;
-    p.photoExpand   = media === "photo" ? rand() * 0.12 * affinity : 0;
-    p.videoOpen     = media === "video" ? rand() * 0.12 * affinity : 0;
-    p.vqv           = media === "video" ? rand() * 0.15 * affinity : 0;
+    p.openLink      = content.link ? rand() * 0.10 * affinity : 0;
+    p.photoExpand   = content.photos > 0 ? rand() * 0.04 * content.photos * affinity : 0;
+    p.videoOpen     = content.video ? rand() * 0.12 * affinity : 0;
+    p.vqv           = content.video ? rand() * 0.15 * affinity : 0;
     p.quotedClick   = rand() * 0.02 * affinity;
     p.profileClick  = rand() * 0.03 * affinity;
     p.dwell         = rand() * 0.5;
@@ -311,7 +317,7 @@ function generateCandidates(config) {
     for (const key of ALL_ACTION_KEYS) counts[key] = 0;
 
     posts.push({
-      author, media, inNetwork, p, negFactor, diversity,
+      author, inNetwork, p, negFactor, diversity,
       arrival: rand() * config.durationSec * 0.9,
       impressions: 0, fracImp: 0, counts,
       contrib: {}, score: 0,
@@ -353,6 +359,11 @@ function startRun() {
     following: Math.max(0, Number($("following").value) || 0),
     postCount: Number($("postCount").value),
     durationSec,
+    content: {
+      photos: Number($("photos").value),
+      video: $("hasVideo").checked,
+      link: $("hasLink").checked,
+    },
   };
   sim = {
     config,
@@ -483,6 +494,15 @@ const fmtCompact = (n) => n < 1000 ? String(n) : n < 1e6 ? (n / 1e3).toFixed(1) 
 
 const actionLabel = (key) => t("action." + key);
 
+function contentLabel() {
+  const c = sim.config.content;
+  const parts = [];
+  if (c.photos > 0) parts.push(t("media.photo") + (c.photos > 1 ? " ×" + c.photos : ""));
+  if (c.video) parts.push(t("media.video"));
+  if (c.link) parts.push(t("media.link"));
+  return parts.length ? parts.join(" · ") : t("media.text");
+}
+
 function renderFeed() {
   if (!sim) return;
   const feed = $("feed");
@@ -523,7 +543,7 @@ function renderFeed() {
     metaEl.textContent = [
       post.inNetwork ? t("meta.inNetwork") : t("meta.outNetwork"),
       post.author.mutual ? t("meta.mutual") : null,
-      t("media." + post.media),
+      contentLabel(),
       fmtCompact(post.impressions) + " " + t("meta.views"),
     ].filter(Boolean).join(" · ");
     head.append(authorEl, metaEl);
@@ -710,6 +730,7 @@ function updateControlOutputs() {
     $("rate" + id + "Value").textContent = (v * 100).toFixed(3) + "%";
   }
   $("postCountValue").textContent = $("postCount").value;
+  $("photosValue").textContent = $("photos").value;
   const mins = Number($("duration").value);
   $("durationValue").textContent = ((mins / 60) | 0) + ":" + String(mins % 60).padStart(2, "0");
 }
