@@ -155,7 +155,7 @@ function scorePost(post) {
 const SPEEDS = [1, 2, 5, 10, 20, 30, 60];
 const currentSpeed = () => SPEEDS[Number($("speed").value)] || 5;
 const TICK_MS = 400;
-const RENDER_EVERY = 3; // re-rank the feed every 3rd tick
+const RENDER_EVERY = 1; // feed nodes are reused, so every tick renders cheaply
 
 let sim = null;
 
@@ -187,6 +187,8 @@ function startRun() {
     timer: setInterval(tick, TICK_MS),
   };
   logEvent({ kind: "start" });
+  $("feed").textContent = "";
+  $("timeline").textContent = "";
   $("clock").hidden = false;
   $("timelinePanel").hidden = false;
   setRunButton(true);
@@ -314,10 +316,86 @@ function contentLabel() {
   return parts.length ? parts.join(" · ") : t("media.text");
 }
 
+function buildPostEl(post) {
+  const el = document.createElement("article");
+  el.className = "post";
+
+  const rank = document.createElement("span");
+  rank.className = "post-rank";
+
+  const main = document.createElement("div");
+  main.className = "post-main";
+
+  const head = document.createElement("div");
+  head.className = "post-head";
+  const author = document.createElement("span");
+  author.className = "post-author";
+  author.textContent = post.author.handle;
+  const meta = document.createElement("span");
+  meta.className = "post-meta";
+  head.append(author, meta);
+
+  const bar = document.createElement("div");
+  bar.className = "bar";
+  const segPos = document.createElement("span");
+  segPos.className = "bar-seg bar-seg--pos";
+  const segNeg = document.createElement("span");
+  segNeg.className = "bar-seg bar-seg--neg";
+  bar.append(segPos, segNeg);
+
+  const actions = document.createElement("div");
+  actions.className = "post-actions";
+
+  main.append(head, bar, actions);
+
+  const score = document.createElement("div");
+  score.className = "post-score";
+  const scoreVal = document.createElement("span");
+  const scoreLabel = document.createElement("span");
+  scoreLabel.className = "post-score-label";
+  score.append(scoreVal, scoreLabel);
+
+  el.append(rank, main, score);
+  post.ui = { el, rank, meta, segPos, segNeg, actions, scoreVal, scoreLabel };
+}
+
+function updatePostEl(post, rank) {
+  const ui = post.ui;
+  ui.el.classList.toggle("post--suppressed", post.score < 0);
+  ui.rank.textContent = String(rank + 1);
+  ui.meta.textContent = [
+    post.inNetwork ? t("meta.inNetwork") : t("meta.outNetwork"),
+    post.author.mutual ? t("meta.mutual") : null,
+    contentLabel(),
+    fmtCompact(post.impressions) + " " + t("meta.views"),
+  ].filter(Boolean).join(" · ");
+
+  let pos = 0, neg = 0;
+  for (const c of Object.values(post.contrib)) c >= 0 ? (pos += c) : (neg += -c);
+  const total = pos + neg || 1;
+  ui.segPos.style.width = (pos / total * 100).toFixed(1) + "%";
+  ui.segNeg.style.width = (neg / total * 100).toFixed(1) + "%";
+
+  const top = Object.entries(post.contrib)
+    .filter(([key, c]) => Math.abs(c) > 0.0005 && post.counts[key] > 0)
+    .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+    .slice(0, 5);
+  ui.actions.textContent = "";
+  for (const [key, c] of top) {
+    const chip = document.createElement("span");
+    if (c < 0) chip.className = "neg";
+    chip.textContent = actionLabel(key) + " " + fmtCompact(post.counts[key]) + " (" + (c >= 0 ? "+" : "−") + fmt(Math.abs(c)) + ")";
+    ui.actions.append(chip);
+  }
+
+  ui.scoreVal.className = "post-score-value" + (post.score < 0 ? " post-score-value--neg" : "");
+  ui.scoreVal.textContent = fmt(post.score);
+  ui.scoreLabel.textContent = post.score < 0 ? t("post.suppressed") : t("post.score");
+}
+
 function renderFeed() {
   if (!sim) return;
   const feed = $("feed");
-  feed.textContent = "";
 
   const arrived = sim.posts.filter((p) => p.arrival <= sim.elapsed);
   arrived.sort((a, b) => b.score - a.score);
@@ -333,75 +411,39 @@ function renderFeed() {
   $("statInNetwork").textContent = arrived.length ? pct(inNet / arrived.length) : "0%";
   $("statMedian").textContent = fmt(median);
 
+  if (!arrived.length) return;
+  const empty = feed.querySelector(".empty");
+  if (empty) empty.remove();
+
+  // FLIP: record positions, reorder, then animate each node from its
+  // old position to its new one instead of snapping.
+  const oldTops = new Map();
+  for (const post of arrived) {
+    if (post.ui && post.ui.el.isConnected) oldTops.set(post, post.ui.el.getBoundingClientRect().top);
+  }
   arrived.forEach((post, i) => {
-    const el = document.createElement("article");
-    el.className = "post" + (post.score < 0 ? " post--suppressed" : "");
-
-    const rank = document.createElement("span");
-    rank.className = "post-rank";
-    rank.textContent = String(i + 1);
-
-    const main = document.createElement("div");
-    main.className = "post-main";
-
-    const head = document.createElement("div");
-    head.className = "post-head";
-    const authorEl = document.createElement("span");
-    authorEl.className = "post-author";
-    authorEl.textContent = post.author.handle;
-    const metaEl = document.createElement("span");
-    metaEl.className = "post-meta";
-    metaEl.textContent = [
-      post.inNetwork ? t("meta.inNetwork") : t("meta.outNetwork"),
-      post.author.mutual ? t("meta.mutual") : null,
-      contentLabel(),
-      fmtCompact(post.impressions) + " " + t("meta.views"),
-    ].filter(Boolean).join(" · ");
-    head.append(authorEl, metaEl);
-
-    // Composition bar: positive vs negative contribution magnitude.
-    let pos = 0, neg = 0;
-    for (const c of Object.values(post.contrib)) c >= 0 ? (pos += c) : (neg += -c);
-    const total = pos + neg || 1;
-    const bar = document.createElement("div");
-    bar.className = "bar";
-    const segPos = document.createElement("span");
-    segPos.className = "bar-seg bar-seg--pos";
-    segPos.style.width = (pos / total * 100).toFixed(1) + "%";
-    const segNeg = document.createElement("span");
-    segNeg.className = "bar-seg bar-seg--neg";
-    segNeg.style.width = (neg / total * 100).toFixed(1) + "%";
-    bar.append(segPos, segNeg);
-
-    // Top contributing actions by absolute impact, with realized counts.
-    const top = Object.entries(post.contrib)
-      .filter(([key, c]) => Math.abs(c) > 0.0005 && post.counts[key] > 0)
-      .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
-      .slice(0, 5);
-    const actions = document.createElement("div");
-    actions.className = "post-actions";
-    for (const [key, c] of top) {
-      const chip = document.createElement("span");
-      if (c < 0) chip.className = "neg";
-      chip.textContent = actionLabel(key) + " " + fmtCompact(post.counts[key]) + " (" + (c >= 0 ? "+" : "−") + fmt(Math.abs(c)) + ")";
-      actions.append(chip);
-    }
-
-    main.append(head, bar, actions);
-
-    const scoreEl = document.createElement("div");
-    scoreEl.className = "post-score";
-    const scoreVal = document.createElement("span");
-    scoreVal.className = "post-score-value" + (post.score < 0 ? " post-score-value--neg" : "");
-    scoreVal.textContent = fmt(post.score);
-    const scoreLabel = document.createElement("span");
-    scoreLabel.className = "post-score-label";
-    scoreLabel.textContent = post.score < 0 ? t("post.suppressed") : t("post.score");
-    scoreEl.append(scoreVal, scoreLabel);
-
-    el.append(rank, main, scoreEl);
-    feed.append(el);
+    if (!post.ui) buildPostEl(post);
+    updatePostEl(post, i);
+    feed.append(post.ui.el);
   });
+  for (const post of arrived) {
+    const el = post.ui.el;
+    const oldTop = oldTops.get(post);
+    if (oldTop === undefined) {
+      el.classList.add("post--enter");
+      requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove("post--enter")));
+      continue;
+    }
+    const delta = oldTop - el.getBoundingClientRect().top;
+    if (delta) {
+      el.style.transition = "none";
+      el.style.transform = "translateY(" + delta + "px)";
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        el.style.transition = "";
+        el.style.transform = "";
+      }));
+    }
+  }
 }
 
 function renderTimeline() {
