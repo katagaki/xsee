@@ -10,27 +10,35 @@ const STRINGS = {
     "section.account": "Account",
     "section.feed": "Feed",
     "section.rates": "Negative feedback rates",
+    "section.timeline": "Timeline",
     "field.followers": "Followers",
     "field.following": "Following",
     "field.postCount": "Candidate posts",
+    "field.duration": "Duration",
     "rate.block": "Block",
     "rate.mute": "Mute",
     "button.randomize": "Randomize rates",
-    "button.run": "Run simulation",
+    "button.run": "Start simulation",
+    "button.stop": "Stop simulation",
     "stat.shown": "Shown",
     "stat.suppressed": "Suppressed",
     "stat.inNetwork": "In-network",
     "stat.median": "Median score",
-    "feed.empty": "Run a simulation to rank a candidate feed.",
+    "feed.empty": "Start a simulation to rank a candidate feed over time.",
     "meta.inNetwork": "In network",
     "meta.outNetwork": "Out of network",
     "meta.mutual": "Mutual",
+    "meta.views": "views",
     "media.text": "Text",
     "media.photo": "Photo",
     "media.video": "Video",
     "media.link": "Link",
     "post.score": "score",
     "post.suppressed": "suppressed",
+    "post.pending": "not yet posted",
+    "event.posted": "posted",
+    "event.start": "Simulation started",
+    "event.end": "Simulation ended",
     "action.favorite": "Favorite",
     "action.reply": "Reply",
     "action.retweet": "Repost",
@@ -74,27 +82,35 @@ const STRINGS = {
     "section.account": "アカウント",
     "section.feed": "フィード",
     "section.rates": "ネガティブフィードバック率",
+    "section.timeline": "タイムライン",
     "field.followers": "フォロワー",
     "field.following": "フォロー中",
     "field.postCount": "候補ポスト数",
+    "field.duration": "シミュレーション時間",
     "rate.block": "ブロック",
     "rate.mute": "ミュート",
     "button.randomize": "率をランダム化",
-    "button.run": "シミュレーション実行",
+    "button.run": "シミュレーション開始",
+    "button.stop": "シミュレーション停止",
     "stat.shown": "表示",
     "stat.suppressed": "抑制",
     "stat.inNetwork": "ネットワーク内",
     "stat.median": "スコア中央値",
-    "feed.empty": "シミュレーションを実行して候補フィードをランク付けします。",
+    "feed.empty": "シミュレーションを開始すると、候補フィードが時間経過でランク付けされます。",
     "meta.inNetwork": "ネットワーク内",
     "meta.outNetwork": "ネットワーク外",
     "meta.mutual": "相互フォロー",
+    "meta.views": "表示",
     "media.text": "テキスト",
     "media.photo": "画像",
     "media.video": "動画",
     "media.link": "リンク",
     "post.score": "スコア",
     "post.suppressed": "抑制",
+    "post.pending": "未投稿",
+    "event.posted": "投稿",
+    "event.start": "シミュレーション開始",
+    "event.end": "シミュレーション終了",
     "action.favorite": "いいね",
     "action.reply": "返信",
     "action.retweet": "リポスト",
@@ -186,11 +202,12 @@ for (const group of [WEIGHTS.positive, WEIGHTS.negative, WEIGHTS.modifiers]) {
   for (const w of group) W[w.key] = w.value;
 }
 
-const actionLabel = (key) => t("action." + key);
+const POSITIVE_KEYS = WEIGHTS.positive.map((w) => w.key);
+const NEG_RATE_KEYS = { report: "report", blockAuthor: "block", muteAuthor: "mute", notInterested: "notInterested" };
+const ALL_ACTION_KEYS = [...POSITIVE_KEYS, "notDwelled", ...Object.keys(NEG_RATE_KEYS)];
 
 /* ------------------------------------------------------------------ *
- * Random number generator (seeded per run so a run is reproducible
- * while it is on screen).
+ * Random number generator (seeded per run).
  * ------------------------------------------------------------------ */
 function mulberry32(seed) {
   return function () {
@@ -201,21 +218,44 @@ function mulberry32(seed) {
   };
 }
 
+function poisson(rand, lambda) {
+  if (lambda <= 0) return 0;
+  if (lambda > 30) {
+    // Normal approximation via Box-Muller for large rates.
+    const g = Math.sqrt(-2 * Math.log(rand() || 1e-12)) * Math.cos(2 * Math.PI * rand());
+    return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * g));
+  }
+  const limit = Math.exp(-lambda);
+  let k = 0, prod = rand();
+  while (prod > limit) { k++; prod *= rand(); }
+  return k;
+}
+
 /* ------------------------------------------------------------------ *
- * Simulation
+ * Candidate generation
  * ------------------------------------------------------------------ */
-const HANDLE_A = ["aria", "kite", "nova", "moss", "juno", "vex", "lumen", "orbit", "pixel", "quill", "sable", "tidal", "umber", "wren", "zephyr", "cinder"];
-const HANDLE_B = ["dev", "art", "lab", "hq", "io", "jp", "za", "works", "daily", "club", "zone", "net", "fm", "co", "gg", "one"];
+const WORDS = [
+  "amber", "aspen", "badger", "bramble", "breeze", "cedar", "cinder", "cloud",
+  "clover", "comet", "coral", "crane", "cricket", "dune", "ember", "falcon",
+  "fern", "flint", "fox", "garnet", "glacier", "grove", "harbor", "hazel",
+  "heron", "juniper", "kestrel", "lagoon", "lantern", "lark", "lichen", "lotus",
+  "maple", "marble", "meadow", "meteor", "mint", "moss", "nettle", "north",
+  "otter", "pebble", "pine", "plume", "prairie", "quartz", "raven", "reed",
+  "ridge", "river", "saffron", "sage", "sparrow", "spruce", "summit", "thistle",
+  "tundra", "walnut", "willow", "wren",
+];
 const MEDIA = ["text", "photo", "video", "link"];
 
 function makeAuthor(rand, mutualProb) {
+  let name = WORDS[(rand() * WORDS.length) | 0];
+  if (rand() < 0.5) name += WORDS[(rand() * WORDS.length) | 0];
   return {
-    handle: "@" + HANDLE_A[(rand() * HANDLE_A.length) | 0] + "_" + HANDLE_B[(rand() * HANDLE_B.length) | 0] + ((rand() * 90 + 10) | 0),
+    handle: "@" + name + ((rand() * 1000) | 0),
     mutual: rand() < mutualProb,
   };
 }
 
-function simulate(config) {
+function generateCandidates(config) {
   const rand = mulberry32(config.seed);
   const posts = [];
 
@@ -235,7 +275,7 @@ function simulate(config) {
     const media = MEDIA[(rand() * MEDIA.length) | 0];
     const affinity = (inNetwork ? 0.5 + rand() * 0.5 : rand() * 0.7) * audienceDamp;
 
-    // Predicted probability of each engagement action for this viewer.
+    // Predicted per-impression probability of each engagement action.
     const p = {};
     p.favorite      = rand() * 0.20 * affinity;
     p.reply         = rand() * 0.04 * affinity;
@@ -253,39 +293,184 @@ function simulate(config) {
     p.quotedClick   = rand() * 0.02 * affinity;
     p.profileClick  = rand() * 0.03 * affinity;
     p.dwell         = rand() * 0.5;
-
-    // Negative feedback, scaled by the configured rates with per-post jitter.
-    const jitter = () => 0.2 + rand() * 1.6;
-    const negBias = 1 + (1 - affinity) * 0.8;
-    p.report        = config.rates.report * jitter() * negBias;
-    p.blockAuthor   = config.rates.block * jitter() * negBias;
-    p.muteAuthor    = config.rates.mute * jitter() * negBias;
-    p.notInterested = config.rates.notInterested * jitter() * negBias;
     p.notDwelled    = 0.2 + rand() * 0.6;
 
-    // Weighted sum of predicted actions.
-    const contrib = {};
-    let score = 0;
-    for (const key of Object.keys(p)) {
-      let weight = W[key];
-      if (key === "reply" && author.mutual) weight += W.bidiReplyBoost;
-      const c = weight * p[key];
-      contrib[key] = c;
-      score += c;
-    }
-    if (!inNetwork) score *= W.oonFactor;
+    // Per-post multiplier on the configured negative rates; the live
+    // slider value is read every tick, so mid-run changes apply.
+    const jitter = () => 0.2 + rand() * 1.6;
+    const negBias = 1 + (1 - affinity) * 0.8;
+    const negFactor = {};
+    for (const key of Object.keys(NEG_RATE_KEYS)) negFactor[key] = jitter() * negBias;
 
     // Author diversity: repeated authors decay toward a floor.
     const priorCount = seenAuthors.get(author.handle) || 0;
     const diversity = Math.max(W.authorFloor, Math.pow(W.authorDecay, priorCount));
     seenAuthors.set(author.handle, priorCount + 1);
-    score *= diversity;
 
-    posts.push({ author, media, inNetwork, p, contrib, score });
+    const counts = {};
+    for (const key of ALL_ACTION_KEYS) counts[key] = 0;
+
+    posts.push({
+      author, media, inNetwork, p, negFactor, diversity,
+      arrival: rand() * config.durationSec * 0.9,
+      impressions: 0, fracImp: 0, counts,
+      contrib: {}, score: 0,
+      arrivedLogged: false, milestoneIdx: 0,
+    });
+  }
+  return posts;
+}
+
+function scorePost(post) {
+  let score = 0;
+  const denom = Math.max(1, post.impressions);
+  for (const key of ALL_ACTION_KEYS) {
+    let weight = W[key];
+    if (key === "reply" && post.author.mutual) weight += W.bidiReplyBoost;
+    const c = weight * (post.counts[key] / denom);
+    post.contrib[key] = c;
+    score += c;
+  }
+  if (!post.inNetwork) score *= W.oonFactor;
+  post.score = score * post.diversity;
+}
+
+/* ------------------------------------------------------------------ *
+ * Timed run: 1 real second advances the simulated clock by 5 seconds.
+ * ------------------------------------------------------------------ */
+const SIM_SPEED = 5;
+const TICK_MS = 400;
+const RENDER_EVERY = 3; // re-rank the feed every 3rd tick
+
+let sim = null;
+
+function startRun() {
+  const followers = Math.max(0, Number($("followers").value) || 0);
+  const durationSec = Number($("duration").value) * 60;
+  const config = {
+    seed: (Math.random() * 2 ** 32) >>> 0,
+    followers,
+    following: Math.max(0, Number($("following").value) || 0),
+    postCount: Number($("postCount").value),
+    durationSec,
+  };
+  sim = {
+    config,
+    posts: generateCandidates(config),
+    rand: mulberry32(config.seed ^ 0x9e3779b9),
+    elapsed: 0,
+    duration: durationSec,
+    reachPerMin: Math.min(5000, Math.max(2, followers * 0.03)),
+    tickCount: 0,
+    events: [],
+    timer: setInterval(tick, TICK_MS),
+  };
+  logEvent({ kind: "start" });
+  $("clock").hidden = false;
+  $("timelinePanel").hidden = false;
+  setRunButton(true);
+  tick();
+}
+
+function stopRun() {
+  if (sim && sim.timer) clearInterval(sim.timer);
+  if (sim) {
+    sim.timer = null;
+    logEvent({ kind: "end" });
+    renderTimeline();
+  }
+  setRunButton(false);
+}
+
+const EVENT_CAP = 150;
+// Only notable actions become timeline events; favorites and views
+// would flood the log.
+const EVENT_ACTIONS = ["report", "blockAuthor", "muteAuthor", "notInterested", "followAuthor", "shareCopyLink"];
+const MILESTONES = [1000, 10000, 100000, 1000000];
+
+function logEvent(event) {
+  if (!sim) return;
+  event.time = sim.elapsed;
+  sim.events.push(event);
+  if (sim.events.length > EVENT_CAP * 2) sim.events.splice(0, sim.events.length - EVENT_CAP);
+}
+
+function tick() {
+  if (!sim) return;
+  const dt = (TICK_MS / 1000) * SIM_SPEED;
+  sim.elapsed = Math.min(sim.elapsed + dt, sim.duration);
+  const rates = readRates();
+
+  for (const post of sim.posts) {
+    if (post.arrival > sim.elapsed) continue;
+    if (!post.arrivedLogged) {
+      post.arrivedLogged = true;
+      logEvent({ kind: "posted", handle: post.author.handle });
+    }
+    const age = sim.elapsed - post.arrival;
+    // Impression rate decays as the post ages (about a 3 hour half-life).
+    const perMin = sim.reachPerMin * Math.exp(-age / (3 * 3600));
+    const withCarry = perMin * (dt / 60) + post.fracImp;
+    const n = Math.floor(withCarry);
+    post.fracImp = withCarry - n;
+    if (n > 0) {
+      post.impressions += n;
+      for (const key of POSITIVE_KEYS) {
+        const hits = poisson(sim.rand, post.p[key] * n);
+        post.counts[key] += hits;
+        if (hits > 0 && EVENT_ACTIONS.includes(key)) {
+          logEvent({ kind: "action", handle: post.author.handle, action: key, count: hits });
+        }
+      }
+      post.counts.notDwelled += poisson(sim.rand, post.p.notDwelled * n);
+      for (const [key, rateKey] of Object.entries(NEG_RATE_KEYS)) {
+        const hits = poisson(sim.rand, rates[rateKey] * post.negFactor[key] * n);
+        post.counts[key] += hits;
+        if (hits > 0) {
+          logEvent({ kind: "action", handle: post.author.handle, action: key, count: hits, negative: true });
+        }
+      }
+      while (post.milestoneIdx < MILESTONES.length && post.impressions >= MILESTONES[post.milestoneIdx]) {
+        logEvent({ kind: "milestone", handle: post.author.handle, views: MILESTONES[post.milestoneIdx] });
+        post.milestoneIdx++;
+      }
+    }
+    scorePost(post);
   }
 
-  posts.sort((a, b) => b.score - a.score);
-  return posts;
+  updateClock();
+  if (sim.tickCount % RENDER_EVERY === 0) {
+    renderFeed();
+    renderTimeline();
+  }
+  sim.tickCount++;
+
+  if (sim.elapsed >= sim.duration) {
+    stopRun();
+    renderFeed();
+    renderTimeline();
+  }
+}
+
+function setRunButton(running) {
+  const btn = $("run");
+  btn.dataset.i18n = running ? "button.stop" : "button.run";
+  btn.textContent = t(btn.dataset.i18n);
+  btn.classList.toggle("btn--danger", running);
+}
+
+function fmtHMS(sec) {
+  sec = Math.round(sec);
+  const h = (sec / 3600) | 0;
+  const m = ((sec % 3600) / 60) | 0;
+  const s = sec % 60;
+  return h + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+}
+
+function updateClock() {
+  if (!sim) return;
+  $("clockTime").textContent = fmtHMS(sim.elapsed) + " / " + fmtHMS(sim.duration);
+  $("clockFill").style.width = ((sim.elapsed / sim.duration) * 100).toFixed(2) + "%";
 }
 
 /* ------------------------------------------------------------------ *
@@ -294,27 +479,30 @@ function simulate(config) {
 const $ = (id) => document.getElementById(id);
 const fmt = (n, d = 2) => n.toLocaleString(lang === "ja" ? "ja-JP" : "en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 const pct = (n) => (n * 100).toFixed(n * 100 >= 10 ? 0 : 1) + "%";
+const fmtCompact = (n) => n < 1000 ? String(n) : n < 1e6 ? (n / 1e3).toFixed(1) + "K" : (n / 1e6).toFixed(1) + "M";
 
-let lastPosts = null;
+const actionLabel = (key) => t("action." + key);
 
-function renderFeed(posts) {
-  lastPosts = posts;
+function renderFeed() {
+  if (!sim) return;
   const feed = $("feed");
   feed.textContent = "";
 
-  const shown = posts.filter((p) => p.score >= 0);
-  const suppressed = posts.length - shown.length;
-  const inNet = posts.filter((p) => p.inNetwork).length;
-  const scores = posts.map((p) => p.score).sort((a, b) => a - b);
-  const median = scores[(scores.length / 2) | 0];
+  const arrived = sim.posts.filter((p) => p.arrival <= sim.elapsed);
+  arrived.sort((a, b) => b.score - a.score);
+
+  const shown = arrived.filter((p) => p.score >= 0);
+  const inNet = arrived.filter((p) => p.inNetwork).length;
+  const scores = arrived.map((p) => p.score).sort((a, b) => a - b);
+  const median = scores.length ? scores[(scores.length / 2) | 0] : 0;
 
   $("stats").hidden = false;
   $("statShown").textContent = String(shown.length);
-  $("statSuppressed").textContent = String(suppressed);
-  $("statInNetwork").textContent = pct(inNet / posts.length);
+  $("statSuppressed").textContent = String(arrived.length - shown.length);
+  $("statInNetwork").textContent = arrived.length ? pct(inNet / arrived.length) : "0%";
   $("statMedian").textContent = fmt(median);
 
-  posts.forEach((post, i) => {
+  arrived.forEach((post, i) => {
     const el = document.createElement("article");
     el.className = "post" + (post.score < 0 ? " post--suppressed" : "");
 
@@ -336,6 +524,7 @@ function renderFeed(posts) {
       post.inNetwork ? t("meta.inNetwork") : t("meta.outNetwork"),
       post.author.mutual ? t("meta.mutual") : null,
       t("media." + post.media),
+      fmtCompact(post.impressions) + " " + t("meta.views"),
     ].filter(Boolean).join(" · ");
     head.append(authorEl, metaEl);
 
@@ -353,9 +542,9 @@ function renderFeed(posts) {
     segNeg.style.width = (neg / total * 100).toFixed(1) + "%";
     bar.append(segPos, segNeg);
 
-    // Top contributing actions, by absolute impact.
+    // Top contributing actions by absolute impact, with realized counts.
     const top = Object.entries(post.contrib)
-      .filter(([, c]) => Math.abs(c) > 0.0005)
+      .filter(([key, c]) => Math.abs(c) > 0.0005 && post.counts[key] > 0)
       .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
       .slice(0, 5);
     const actions = document.createElement("div");
@@ -363,7 +552,7 @@ function renderFeed(posts) {
     for (const [key, c] of top) {
       const chip = document.createElement("span");
       if (c < 0) chip.className = "neg";
-      chip.textContent = actionLabel(key) + " " + (c >= 0 ? "+" : "−") + fmt(Math.abs(c));
+      chip.textContent = actionLabel(key) + " " + fmtCompact(post.counts[key]) + " (" + (c >= 0 ? "+" : "−") + fmt(Math.abs(c)) + ")";
       actions.append(chip);
     }
 
@@ -382,6 +571,33 @@ function renderFeed(posts) {
     el.append(rank, main, scoreEl);
     feed.append(el);
   });
+}
+
+function renderTimeline() {
+  if (!sim) return;
+  const list = $("timeline");
+  list.textContent = "";
+  const events = sim.events.slice(-EVENT_CAP);
+  for (let i = events.length - 1; i >= 0; i--) {
+    const ev = events[i];
+    const li = document.createElement("li");
+    li.className = "timeline-item" + (ev.negative ? " timeline-item--neg" : "");
+
+    const time = document.createElement("span");
+    time.className = "timeline-time";
+    time.textContent = fmtHMS(ev.time);
+
+    const text = document.createElement("span");
+    text.className = "timeline-text";
+    if (ev.kind === "start") text.textContent = t("event.start");
+    else if (ev.kind === "end") text.textContent = t("event.end");
+    else if (ev.kind === "posted") text.textContent = ev.handle + " · " + t("event.posted");
+    else if (ev.kind === "milestone") text.textContent = ev.handle + " · " + fmtCompact(ev.views) + " " + t("meta.views");
+    else text.textContent = ev.handle + " · " + actionLabel(ev.action) + (ev.count > 1 ? " ×" + ev.count : "");
+
+    li.append(time, text);
+    list.append(li);
+  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -463,7 +679,8 @@ function applyLanguage() {
   });
   $("langPicker").value = lang;
   renderWeights();
-  if (lastPosts) renderFeed(lastPosts);
+  renderFeed();
+  renderTimeline();
 }
 
 $("langPicker").addEventListener("change", (e) => {
@@ -487,31 +704,21 @@ function readRates() {
   return rates;
 }
 
-function updateRateOutputs() {
+function updateControlOutputs() {
   for (const id of RATE_IDS) {
     const v = Number($("rate" + id).value) * RATE_SCALE;
     $("rate" + id + "Value").textContent = (v * 100).toFixed(3) + "%";
   }
   $("postCountValue").textContent = $("postCount").value;
-}
-
-function run() {
-  const config = {
-    seed: (Math.random() * 2 ** 32) >>> 0,
-    followers: Math.max(0, Number($("followers").value) || 0),
-    following: Math.max(0, Number($("following").value) || 0),
-    postCount: Number($("postCount").value),
-    rates: readRates(),
-  };
-  renderFeed(simulate(config));
+  const mins = Number($("duration").value);
+  $("durationValue").textContent = ((mins / 60) | 0) + ":" + String(mins % 60).padStart(2, "0");
 }
 
 function randomizeRates() {
   for (const id of RATE_IDS) {
     $("rate" + id).value = String((Math.random() * 60) | 0);
   }
-  updateRateOutputs();
-  run();
+  updateControlOutputs();
 }
 
 /* ------------------------------------------------------------------ *
@@ -530,10 +737,12 @@ document.querySelectorAll(".tab").forEach((tab) => {
   });
 });
 
-document.querySelectorAll('input[type="range"]').forEach((el) => el.addEventListener("input", updateRateOutputs));
-$("run").addEventListener("click", run);
+document.querySelectorAll('input[type="range"]').forEach((el) => el.addEventListener("input", updateControlOutputs));
+$("run").addEventListener("click", () => {
+  if (sim && sim.timer) stopRun();
+  else startRun();
+});
 $("randomizeRates").addEventListener("click", randomizeRates);
 
 applyLanguage();
-updateRateOutputs();
-run();
+updateControlOutputs();

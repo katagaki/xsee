@@ -40,6 +40,10 @@
             <label for="postCount"><span data-i18n="field.postCount">Candidate posts</span> <output id="postCountValue">30</output></label>
             <input type="range" id="postCount" min="10" max="100" step="5" value="30">
           </div>
+          <div class="field">
+            <label for="duration"><span data-i18n="field.duration">Duration</span> <output id="durationValue">2:00</output></label>
+            <input type="range" id="duration" min="30" max="1440" step="30" value="120">
+          </div>
 
           <h2 class="section-title" data-i18n="section.rates">Negative feedback rates</h2>
           <div class="field">
@@ -66,14 +70,25 @@
         </aside>
 
         <div class="results">
+          <div class="clock" id="clock" hidden>
+            <span class="clock-time" id="clockTime">0:00:00</span>
+            <span class="clock-speed">5×</span>
+            <div class="clock-bar"><div class="clock-fill" id="clockFill"></div></div>
+          </div>
           <div class="stats" id="stats" hidden>
             <div class="stat"><span class="stat-label" data-i18n="stat.shown">Shown</span><span class="stat-value" id="statShown">-</span></div>
             <div class="stat"><span class="stat-label" data-i18n="stat.suppressed">Suppressed</span><span class="stat-value" id="statSuppressed">-</span></div>
             <div class="stat"><span class="stat-label" data-i18n="stat.inNetwork">In-network</span><span class="stat-value" id="statInNetwork">-</span></div>
             <div class="stat"><span class="stat-label" data-i18n="stat.median">Median score</span><span class="stat-value" id="statMedian">-</span></div>
           </div>
-          <div id="feed" class="feed">
-            <p class="empty" data-i18n="feed.empty">Run a simulation to rank a candidate feed.</p>
+          <div class="results-grid">
+            <div id="feed" class="feed">
+              <p class="empty" data-i18n="feed.empty">Start a simulation to rank a candidate feed over time.</p>
+            </div>
+            <aside class="timeline" id="timelinePanel" hidden>
+              <h2 class="section-title" data-i18n="section.timeline">Timeline</h2>
+              <ol id="timeline" class="timeline-list"></ol>
+            </aside>
           </div>
         </div>
       </div>

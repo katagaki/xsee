@@ -202,7 +202,24 @@ input[type="range"]::-moz-range-thumb {
 .btn--primary:active { background: var(--interactive-active); }
 .btn--secondary { background: var(--button-secondary); color: #ffffff; }
 .btn--secondary:hover { background: var(--button-secondary-hover); }
+.btn--danger { background: var(--support-error); }
+.btn--danger:hover { background: #ba1b23; }
 .btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; box-shadow: inset 0 0 0 2px #ffffff; }
+
+/* ---------- clock ---------- */
+.clock {
+  background: var(--layer);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 12px;
+  align-items: baseline;
+}
+.clock-time { font-size: 20px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.clock-speed { font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.clock-bar { grid-column: 1 / -1; height: 4px; background: var(--field); }
+.clock-fill { height: 100%; width: 0; background: var(--interactive); }
 
 /* ---------- stats ---------- */
 .stats {
@@ -218,7 +235,46 @@ input[type="range"]::-moz-range-thumb {
 .stat-label { display: block; font-size: 12px; color: var(--text-secondary); }
 .stat-value { display: block; font-size: 24px; font-weight: 300; font-variant-numeric: tabular-nums; }
 
-/* ---------- feed ---------- */
+/* ---------- feed + timeline ---------- */
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr 264px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1000px) {
+  .results-grid { grid-template-columns: 1fr; }
+}
+
+.timeline {
+  background: var(--layer);
+  padding: 12px 16px;
+}
+.timeline .section-title { margin: 0 0 8px; }
+.timeline-list {
+  list-style: none;
+  max-height: 480px;
+  overflow-y: auto;
+}
+.timeline-item {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 11px;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+.timeline-item:first-child { border-top: none; }
+.timeline-item--neg .timeline-text { color: var(--support-error); }
+.timeline-time {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.timeline-text {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
 .feed { display: flex; flex-direction: column; gap: 8px; }
 .empty { color: var(--text-secondary); padding: 48px 0; text-align: center; }
 
