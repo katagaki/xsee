@@ -3,160 +3,7 @@
 /* ------------------------------------------------------------------ *
  * Localization
  * ------------------------------------------------------------------ */
-const STRINGS = {
-  en: {
-    "tab.simulator": "Simulator",
-    "tab.weights": "Weights",
-    "section.account": "Account",
-    "section.feed": "Feed",
-    "section.rates": "Negative feedback rates",
-    "section.timeline": "Timeline",
-    "section.post": "Post content",
-    "field.followers": "Followers",
-    "field.following": "Following",
-    "field.postCount": "Candidate posts",
-    "field.duration": "Duration",
-    "field.photos": "Photos",
-    "field.video": "Video",
-    "field.link": "Link",
-    "rate.block": "Block",
-    "rate.mute": "Mute",
-    "button.randomize": "Randomize rates",
-    "button.run": "Start simulation",
-    "button.stop": "Stop simulation",
-    "stat.shown": "Shown",
-    "stat.suppressed": "Suppressed",
-    "stat.inNetwork": "In-network",
-    "stat.median": "Median score",
-    "feed.empty": "Start a simulation to rank a candidate feed over time.",
-    "meta.inNetwork": "In network",
-    "meta.outNetwork": "Out of network",
-    "meta.mutual": "Mutual",
-    "meta.views": "views",
-    "media.text": "Text",
-    "media.photo": "Photo",
-    "media.video": "Video",
-    "media.link": "Link",
-    "post.score": "score",
-    "post.suppressed": "suppressed",
-    "post.pending": "not yet posted",
-    "event.posted": "posted",
-    "event.start": "Simulation started",
-    "event.end": "Simulation ended",
-    "action.favorite": "Favorite",
-    "action.reply": "Reply",
-    "action.retweet": "Repost",
-    "action.quote": "Quote",
-    "action.share": "Share",
-    "action.shareDm": "Share via DM",
-    "action.shareCopyLink": "Share via copy link",
-    "action.followAuthor": "Follow author",
-    "action.click": "Click",
-    "action.openLink": "Open link",
-    "action.photoExpand": "Photo expand",
-    "action.videoOpen": "Video open",
-    "action.vqv": "Quality video view",
-    "action.quotedClick": "Quoted post click",
-    "action.profileClick": "Profile click",
-    "action.dwell": "Dwell",
-    "action.notDwelled": "Not dwelled",
-    "action.blockAuthor": "Block author",
-    "action.notInterested": "Not interested",
-    "action.muteAuthor": "Mute author",
-    "action.report": "Report",
-    "mod.bidiReplyBoost": "Mutual-follow reply boost",
-    "mod.oonFactor": "Out-of-network factor",
-    "mod.topicOonFactor": "Topic out-of-network factor",
-    "mod.authorDecay": "Author diversity decay",
-    "mod.authorFloor": "Author diversity floor",
-    "mod.unexplored": "Unexplored post weight",
-    "mod.contDwellTime": "Continuous dwell time",
-    "weights.groupPositive": "Positive engagement",
-    "weights.groupNegative": "Negative feedback",
-    "weights.groupModifiers": "Modifiers",
-    "weights.colAction": "Action",
-    "weights.colWeight": "Weight",
-    "weights.notePositive": "Each predicted action probability is multiplied by its weight; the sum ranks the post.",
-    "weights.noteNegative": "A single likely report outweighs hundreds of likely favorites.",
-    "weights.noteModifiers": "Applied after the weighted sum: network origin, mutual follows, and author repetition scale the final score.",
-  },
-  ja: {
-    "tab.simulator": "シミュレーター",
-    "tab.weights": "ウエイト",
-    "section.account": "アカウント",
-    "section.feed": "フィード",
-    "section.rates": "ネガティブフィードバック率",
-    "section.timeline": "タイムライン",
-    "section.post": "ポスト内容",
-    "field.followers": "フォロワー",
-    "field.following": "フォロー中",
-    "field.postCount": "候補ポスト数",
-    "field.duration": "シミュレーション時間",
-    "field.photos": "画像",
-    "field.video": "動画",
-    "field.link": "リンク",
-    "rate.block": "ブロック",
-    "rate.mute": "ミュート",
-    "button.randomize": "率をランダム化",
-    "button.run": "シミュレーション開始",
-    "button.stop": "シミュレーション停止",
-    "stat.shown": "表示",
-    "stat.suppressed": "抑制",
-    "stat.inNetwork": "ネットワーク内",
-    "stat.median": "スコア中央値",
-    "feed.empty": "シミュレーションを開始すると、候補フィードが時間経過でランク付けされます。",
-    "meta.inNetwork": "ネットワーク内",
-    "meta.outNetwork": "ネットワーク外",
-    "meta.mutual": "相互フォロー",
-    "meta.views": "表示",
-    "media.text": "テキスト",
-    "media.photo": "画像",
-    "media.video": "動画",
-    "media.link": "リンク",
-    "post.score": "スコア",
-    "post.suppressed": "抑制",
-    "post.pending": "未投稿",
-    "event.posted": "投稿",
-    "event.start": "シミュレーション開始",
-    "event.end": "シミュレーション終了",
-    "action.favorite": "いいね",
-    "action.reply": "返信",
-    "action.retweet": "リポスト",
-    "action.quote": "引用",
-    "action.share": "共有",
-    "action.shareDm": "DMで共有",
-    "action.shareCopyLink": "リンクのコピーで共有",
-    "action.followAuthor": "作成者をフォロー",
-    "action.click": "クリック",
-    "action.openLink": "リンクを開く",
-    "action.photoExpand": "画像を拡大",
-    "action.videoOpen": "動画を開く",
-    "action.vqv": "動画の視聴",
-    "action.quotedClick": "引用元のクリック",
-    "action.profileClick": "プロフィールのクリック",
-    "action.dwell": "滞在",
-    "action.notDwelled": "滞在なし",
-    "action.blockAuthor": "作成者をブロック",
-    "action.notInterested": "興味がない",
-    "action.muteAuthor": "作成者をミュート",
-    "action.report": "報告",
-    "mod.bidiReplyBoost": "相互フォロー返信ブースト",
-    "mod.oonFactor": "ネットワーク外係数",
-    "mod.topicOonFactor": "トピックネットワーク外係数",
-    "mod.authorDecay": "作成者多様性の減衰",
-    "mod.authorFloor": "作成者多様性の下限",
-    "mod.unexplored": "未探索ポストのウエイト",
-    "mod.contDwellTime": "継続滞在時間",
-    "weights.groupPositive": "ポジティブエンゲージメント",
-    "weights.groupNegative": "ネガティブフィードバック",
-    "weights.groupModifiers": "修飾係数",
-    "weights.colAction": "アクション",
-    "weights.colWeight": "ウエイト",
-    "weights.notePositive": "各アクションの予測確率にウエイトを掛け、その合計でポストをランク付けします。",
-    "weights.noteNegative": "1件の報告の見込みは、数百件のいいねの見込みを上回ります。",
-    "weights.noteModifiers": "加重合計の後に適用されます。ネットワークの内外、相互フォロー、作成者の重複が最終スコアを調整します。",
-  },
-};
+let STRINGS = { en: {}, ja: {} };
 
 let lang = localStorage.getItem("lang");
 if (lang !== "en" && lang !== "ja") {
@@ -168,51 +15,22 @@ const t = (key) => (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.en[key] || k
  * Scoring weights, sourced from the public feed ranking configuration
  * (home-mixer/params/param.rs).
  * ------------------------------------------------------------------ */
-const WEIGHTS = {
-  positive: [
-    { key: "favorite",      value: 0.5 },
-    { key: "reply",         value: 5.0 },
-    { key: "retweet",       value: 1.0 },
-    { key: "quote",         value: 5.0 },
-    { key: "share",         value: 2.0 },
-    { key: "shareDm",       value: 5.0 },
-    { key: "shareCopyLink", value: 20.0 },
-    { key: "followAuthor",  value: 4.0 },
-    { key: "click",         value: 0.4 },
-    { key: "openLink",      value: 0.2 },
-    { key: "photoExpand",   value: 0.05 },
-    { key: "videoOpen",     value: 0.05 },
-    { key: "vqv",           value: 0.05 },
-    { key: "quotedClick",   value: 0.05 },
-    { key: "profileClick",  value: 0.0 },
-    { key: "dwell",         value: 0.0 },
-  ],
-  negative: [
-    { key: "notDwelled",    value: -0.02 },
-    { key: "blockAuthor",   value: -31.2 },
-    { key: "notInterested", value: -43.2 },
-    { key: "muteAuthor",    value: -58.8 },
-    { key: "report",        value: -234.0 },
-  ],
-  modifiers: [
-    { key: "bidiReplyBoost", value: 15.0 },
-    { key: "oonFactor",      value: 0.75 },
-    { key: "topicOonFactor", value: 0.5 },
-    { key: "authorDecay",    value: 0.5 },
-    { key: "authorFloor",    value: 0.25 },
-    { key: "unexplored",     value: 0.02 },
-    { key: "contDwellTime",  value: 0.004 },
-  ],
-};
-
+let WORDS = [];
+let WEIGHTS = { positive: [], negative: [], modifiers: [] };
 const W = {};
-for (const group of [WEIGHTS.positive, WEIGHTS.negative, WEIGHTS.modifiers]) {
-  for (const w of group) W[w.key] = w.value;
-}
-
-const POSITIVE_KEYS = WEIGHTS.positive.map((w) => w.key);
+let POSITIVE_KEYS = [];
 const NEG_RATE_KEYS = { report: "report", blockAuthor: "block", muteAuthor: "mute", notInterested: "notInterested" };
-const ALL_ACTION_KEYS = [...POSITIVE_KEYS, "notDwelled", ...Object.keys(NEG_RATE_KEYS)];
+let ALL_ACTION_KEYS = [];
+
+function setStaticData(data) {
+  WORDS = data.usernameWords;
+  WEIGHTS = data.weights;
+  for (const group of [WEIGHTS.positive, WEIGHTS.negative, WEIGHTS.modifiers]) {
+    for (const w of group) W[w.key] = w.value;
+  }
+  POSITIVE_KEYS = WEIGHTS.positive.map((w) => w.key);
+  ALL_ACTION_KEYS = [...POSITIVE_KEYS, "notDwelled", ...Object.keys(NEG_RATE_KEYS)];
+}
 
 /* ------------------------------------------------------------------ *
  * Random number generator (seeded per run).
@@ -242,16 +60,6 @@ function poisson(rand, lambda) {
 /* ------------------------------------------------------------------ *
  * Candidate generation
  * ------------------------------------------------------------------ */
-const WORDS = [
-  "amber", "aspen", "badger", "bramble", "breeze", "cedar", "cinder", "cloud",
-  "clover", "comet", "coral", "crane", "cricket", "dune", "ember", "falcon",
-  "fern", "flint", "fox", "garnet", "glacier", "grove", "harbor", "hazel",
-  "heron", "juniper", "kestrel", "lagoon", "lantern", "lark", "lichen", "lotus",
-  "maple", "marble", "meadow", "meteor", "mint", "moss", "nettle", "north",
-  "otter", "pebble", "pine", "plume", "prairie", "quartz", "raven", "reed",
-  "ridge", "river", "saffron", "sage", "sparrow", "spruce", "summit", "thistle",
-  "tundra", "walnut", "willow", "wren",
-];
 function makeAuthor(rand, mutualProb) {
   let name = WORDS[(rand() * WORDS.length) | 0];
   if (rand() < 0.5) name += WORDS[(rand() * WORDS.length) | 0];
@@ -344,13 +152,15 @@ function scorePost(post) {
 /* ------------------------------------------------------------------ *
  * Timed run: 1 real second advances the simulated clock by 5 seconds.
  * ------------------------------------------------------------------ */
-const SIM_SPEED = 5;
+const SPEEDS = [1, 2, 5, 10, 20, 30, 60];
+const currentSpeed = () => SPEEDS[Number($("speed").value)] || 5;
 const TICK_MS = 400;
 const RENDER_EVERY = 3; // re-rank the feed every 3rd tick
 
 let sim = null;
 
 function startRun() {
+  if (!WORDS.length) return;
   const followers = Math.max(0, Number($("followers").value) || 0);
   const durationSec = Number($("duration").value) * 60;
   const config = {
@@ -408,7 +218,7 @@ function logEvent(event) {
 
 function tick() {
   if (!sim) return;
-  const dt = (TICK_MS / 1000) * SIM_SPEED;
+  const dt = (TICK_MS / 1000) * currentSpeed();
   sim.elapsed = Math.min(sim.elapsed + dt, sim.duration);
   const rates = readRates();
 
@@ -480,6 +290,7 @@ function fmtHMS(sec) {
 
 function updateClock() {
   if (!sim) return;
+  $("clockSpeed").textContent = currentSpeed() + "×";
   $("clockTime").textContent = fmtHMS(sim.elapsed) + " / " + fmtHMS(sim.duration);
   $("clockFill").style.width = ((sim.elapsed / sim.duration) * 100).toFixed(2) + "%";
 }
@@ -731,6 +542,7 @@ function updateControlOutputs() {
   }
   $("postCountValue").textContent = $("postCount").value;
   $("photosValue").textContent = $("photos").value;
+  $("speedValue").textContent = currentSpeed() + "×";
   const mins = Number($("duration").value);
   $("durationValue").textContent = ((mins / 60) | 0) + ":" + String(mins % 60).padStart(2, "0");
 }
@@ -765,5 +577,12 @@ $("run").addEventListener("click", () => {
 });
 $("randomizeRates").addEventListener("click", randomizeRates);
 
-applyLanguage();
-updateControlOutputs();
+Promise.all([
+  fetch("data.json").then((r) => r.json()),
+  fetch("strings.json").then((r) => r.json()),
+]).then(([data, strings]) => {
+  setStaticData(data);
+  STRINGS = strings;
+  applyLanguage();
+  updateControlOutputs();
+});

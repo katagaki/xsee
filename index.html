@@ -45,6 +45,10 @@
             <label for="duration"><span data-i18n="field.duration">Duration</span> <output id="durationValue">2:00</output></label>
             <input type="range" id="duration" min="30" max="1440" step="30" value="120">
           </div>
+          <div class="field">
+            <label for="speed"><span data-i18n="field.speed">Speed</span> <output id="speedValue">5×</output></label>
+            <input type="range" id="speed" min="0" max="6" step="1" value="2">
+          </div>
 
           <h2 class="section-title" data-i18n="section.post">Post content</h2>
           <div class="field">
@@ -87,7 +91,7 @@
         <div class="results">
           <div class="clock" id="clock" hidden>
             <span class="clock-time" id="clockTime">0:00:00</span>
-            <span class="clock-speed">5×</span>
+            <span class="clock-speed" id="clockSpeed">5×</span>
             <div class="clock-bar"><div class="clock-fill" id="clockFill"></div></div>
           </div>
           <div class="stats" id="stats" hidden>
