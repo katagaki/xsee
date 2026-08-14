@@ -154,8 +154,8 @@ function scorePost(post) {
  * ------------------------------------------------------------------ */
 const SPEEDS = [1, 2, 5, 10, 20, 30, 60];
 const currentSpeed = () => SPEEDS[Number($("speed").value)] || 5;
-const TICK_MS = 400;
-const RENDER_EVERY = 1; // feed nodes are reused, so every tick renders cheaply
+const RENDER_MS = 400;   // real ms between feed/timeline re-renders
+const MAX_STEPS = 300;   // cap sim steps per frame so slow frames never freeze the page
 
 let sim = null;
 
@@ -180,11 +180,16 @@ function startRun() {
     posts: generateCandidates(config),
     rand: mulberry32(config.seed ^ 0x9e3779b9),
     elapsed: 0,
+    carry: 0,
     duration: durationSec,
     reachPerMin: Math.min(5000, Math.max(2, followers * 0.03)),
-    tickCount: 0,
     events: [],
-    timer: setInterval(tick, TICK_MS),
+    eventId: 0,
+    lastRenderedEventId: 0,
+    lastReal: performance.now(),
+    lastRenderReal: 0,
+    running: true,
+    raf: 0,
   };
   logEvent({ kind: "start" });
   $("feed").textContent = "";
@@ -192,14 +197,15 @@ function startRun() {
   $("clock").hidden = false;
   $("timelinePanel").hidden = false;
   setRunButton(true);
-  tick();
+  sim.raf = requestAnimationFrame(frame);
 }
 
 function stopRun() {
-  if (sim && sim.timer) clearInterval(sim.timer);
-  if (sim) {
-    sim.timer = null;
+  if (sim && sim.running) {
+    cancelAnimationFrame(sim.raf);
+    sim.running = false;
     logEvent({ kind: "end" });
+    renderFeed();
     renderTimeline();
   }
   setRunButton(false);
@@ -214,16 +220,42 @@ const MILESTONES = [1000, 10000, 100000, 1000000];
 function logEvent(event) {
   if (!sim) return;
   event.time = sim.elapsed;
+  event.id = ++sim.eventId;
   sim.events.push(event);
   if (sim.events.length > EVENT_CAP * 2) sim.events.splice(0, sim.events.length - EVENT_CAP);
 }
 
-function tick() {
-  if (!sim) return;
-  const dt = (TICK_MS / 1000) * currentSpeed();
-  sim.elapsed = Math.min(sim.elapsed + dt, sim.duration);
-  const rates = readRates();
+// Every frame converts real time into whole simulated seconds and runs
+// one fixed 1-second step per simulated second; speed only changes how
+// many steps a frame performs.
+function frame() {
+  if (!sim || !sim.running) return;
+  const now = performance.now();
+  const realDt = Math.min(1000, now - sim.lastReal);
+  sim.lastReal = now;
+  sim.carry += (realDt / 1000) * currentSpeed();
+  let steps = Math.min(MAX_STEPS, Math.floor(sim.carry));
+  sim.carry -= steps;
 
+  const rates = readRates();
+  while (steps-- > 0 && sim.elapsed < sim.duration) {
+    sim.elapsed += 1;
+    stepSim(rates);
+  }
+
+  updateClock();
+  if (now - sim.lastRenderReal >= RENDER_MS) {
+    sim.lastRenderReal = now;
+    renderFeed();
+    renderTimeline();
+  }
+
+  if (sim.elapsed >= sim.duration) stopRun();
+  else sim.raf = requestAnimationFrame(frame);
+}
+
+// One simulated second for every arrived post.
+function stepSim(rates) {
   for (const post of sim.posts) {
     if (post.arrival > sim.elapsed) continue;
     if (!post.arrivedLogged) {
@@ -233,7 +265,7 @@ function tick() {
     const age = sim.elapsed - post.arrival;
     // Impression rate decays as the post ages (about a 3 hour half-life).
     const perMin = sim.reachPerMin * Math.exp(-age / (3 * 3600));
-    const withCarry = perMin * (dt / 60) + post.fracImp;
+    const withCarry = perMin / 60 + post.fracImp;
     const n = Math.floor(withCarry);
     post.fracImp = withCarry - n;
     if (n > 0) {
@@ -257,21 +289,8 @@ function tick() {
         logEvent({ kind: "milestone", handle: post.author.handle, views: MILESTONES[post.milestoneIdx] });
         post.milestoneIdx++;
       }
+      scorePost(post);
     }
-    scorePost(post);
-  }
-
-  updateClock();
-  if (sim.tickCount % RENDER_EVERY === 0) {
-    renderFeed();
-    renderTimeline();
-  }
-  sim.tickCount++;
-
-  if (sim.elapsed >= sim.duration) {
-    stopRun();
-    renderFeed();
-    renderTimeline();
   }
 }
 
@@ -446,31 +465,48 @@ function renderFeed() {
   }
 }
 
+function buildTimelineItem(ev) {
+  const li = document.createElement("li");
+  li.className = "timeline-item" + (ev.negative ? " timeline-item--neg" : "");
+
+  const time = document.createElement("span");
+  time.className = "timeline-time";
+  time.textContent = fmtHMS(ev.time);
+
+  const text = document.createElement("span");
+  text.className = "timeline-text";
+  if (ev.kind === "start") text.textContent = t("event.start");
+  else if (ev.kind === "end") text.textContent = t("event.end");
+  else if (ev.kind === "posted") text.textContent = ev.handle + " · " + t("event.posted");
+  else if (ev.kind === "milestone") text.textContent = ev.handle + " · " + fmtCompact(ev.views) + " " + t("meta.views");
+  else text.textContent = ev.handle + " · " + actionLabel(ev.action) + (ev.count > 1 ? " ×" + ev.count : "");
+
+  li.append(time, text);
+  return li;
+}
+
+// Prepend only events that have not been rendered yet, fading them in.
 function renderTimeline() {
+  if (!sim) return;
+  const list = $("timeline");
+  const fresh = sim.events.filter((ev) => ev.id > sim.lastRenderedEventId);
+  for (const ev of fresh) {
+    const li = buildTimelineItem(ev);
+    li.classList.add("timeline-item--enter");
+    list.prepend(li);
+    requestAnimationFrame(() => requestAnimationFrame(() => li.classList.remove("timeline-item--enter")));
+    sim.lastRenderedEventId = ev.id;
+  }
+  while (list.children.length > EVENT_CAP) list.lastChild.remove();
+}
+
+// Full rebuild without animation, used on language switch.
+function rebuildTimeline() {
   if (!sim) return;
   const list = $("timeline");
   list.textContent = "";
   const events = sim.events.slice(-EVENT_CAP);
-  for (let i = events.length - 1; i >= 0; i--) {
-    const ev = events[i];
-    const li = document.createElement("li");
-    li.className = "timeline-item" + (ev.negative ? " timeline-item--neg" : "");
-
-    const time = document.createElement("span");
-    time.className = "timeline-time";
-    time.textContent = fmtHMS(ev.time);
-
-    const text = document.createElement("span");
-    text.className = "timeline-text";
-    if (ev.kind === "start") text.textContent = t("event.start");
-    else if (ev.kind === "end") text.textContent = t("event.end");
-    else if (ev.kind === "posted") text.textContent = ev.handle + " · " + t("event.posted");
-    else if (ev.kind === "milestone") text.textContent = ev.handle + " · " + fmtCompact(ev.views) + " " + t("meta.views");
-    else text.textContent = ev.handle + " · " + actionLabel(ev.action) + (ev.count > 1 ? " ×" + ev.count : "");
-
-    li.append(time, text);
-    list.append(li);
-  }
+  for (const ev of events) list.prepend(buildTimelineItem(ev));
 }
 
 /* ------------------------------------------------------------------ *
@@ -553,7 +589,7 @@ function applyLanguage() {
   $("langPicker").value = lang;
   renderWeights();
   renderFeed();
-  renderTimeline();
+  rebuildTimeline();
 }
 
 $("langPicker").addEventListener("change", (e) => {
@@ -614,7 +650,7 @@ document.querySelectorAll(".tab").forEach((tab) => {
 
 document.querySelectorAll('input[type="range"]').forEach((el) => el.addEventListener("input", updateControlOutputs));
 $("run").addEventListener("click", () => {
-  if (sim && sim.timer) stopRun();
+  if (sim && sim.running) stopRun();
   else startRun();
 });
 $("randomizeRates").addEventListener("click", randomizeRates);

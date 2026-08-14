@@ -244,7 +244,7 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--focus); outline-
 .clock-time { font-size: 20px; font-weight: 300; font-variant-numeric: tabular-nums; }
 .clock-speed { font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 .clock-bar { grid-column: 1 / -1; height: 4px; background: var(--field); }
-.clock-fill { height: 100%; width: 0; background: var(--interactive); transition: width 400ms linear; }
+.clock-fill { height: 100%; width: 0; background: var(--interactive); transition: width 120ms linear; }
 
 /* ---------- stats ---------- */
 .stats {
