@@ -5,7 +5,6 @@
  * ------------------------------------------------------------------ */
 const STRINGS = {
   en: {
-    "app.subtitle": "Feed Algorithm Simulator",
     "tab.simulator": "Simulator",
     "tab.weights": "Weights",
     "section.account": "Account",
@@ -70,9 +69,8 @@ const STRINGS = {
     "weights.noteModifiers": "Applied after the weighted sum: network origin, mutual follows, and author repetition scale the final score.",
   },
   ja: {
-    "app.subtitle": "フィードアルゴリズムシミュレーター",
     "tab.simulator": "シミュレーター",
-    "tab.weights": "重み",
+    "tab.weights": "ウエイト",
     "section.account": "アカウント",
     "section.feed": "フィード",
     "section.rates": "ネガティブフィードバック率",
@@ -123,14 +121,14 @@ const STRINGS = {
     "mod.topicOonFactor": "トピックネットワーク外係数",
     "mod.authorDecay": "作成者多様性の減衰",
     "mod.authorFloor": "作成者多様性の下限",
-    "mod.unexplored": "未探索ポストの重み",
+    "mod.unexplored": "未探索ポストのウエイト",
     "mod.contDwellTime": "継続滞在時間",
     "weights.groupPositive": "ポジティブエンゲージメント",
     "weights.groupNegative": "ネガティブフィードバック",
     "weights.groupModifiers": "修飾係数",
     "weights.colAction": "アクション",
-    "weights.colWeight": "重み",
-    "weights.notePositive": "各アクションの予測確率に重みを掛け、その合計でポストをランク付けします。",
+    "weights.colWeight": "ウエイト",
+    "weights.notePositive": "各アクションの予測確率にウエイトを掛け、その合計でポストをランク付けします。",
     "weights.noteNegative": "1件の報告の見込みは、数百件のいいねの見込みを上回ります。",
     "weights.noteModifiers": "加重合計の後に適用されます。ネットワークの内外、相互フォロー、作成者の重複が最終スコアを調整します。",
   },
@@ -460,23 +458,18 @@ function renderWeights() {
  * ------------------------------------------------------------------ */
 function applyLanguage() {
   document.documentElement.lang = lang;
-  document.title = "XSee — " + t("app.subtitle");
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     el.textContent = t(el.dataset.i18n);
   });
-  document.querySelectorAll(".lang-btn").forEach((btn) => {
-    btn.classList.toggle("lang-btn--active", btn.dataset.lang === lang);
-  });
+  $("langPicker").value = lang;
   renderWeights();
   if (lastPosts) renderFeed(lastPosts);
 }
 
-document.querySelectorAll(".lang-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    lang = btn.dataset.lang;
-    localStorage.setItem("lang", lang);
-    applyLanguage();
-  });
+$("langPicker").addEventListener("change", (e) => {
+  lang = e.target.value;
+  localStorage.setItem("lang", lang);
+  applyLanguage();
 });
 
 /* ------------------------------------------------------------------ *
