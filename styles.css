@@ -52,6 +52,8 @@
 
 body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
   font-size: 14px;
   line-height: 1.4;
   color: var(--text);
@@ -73,6 +75,7 @@ body {
 
 .topbar-link {
   margin-left: auto;
+  cursor: default;
   font-size: 12px;
   color: var(--inverse-text-secondary);
   text-decoration: none;
@@ -94,7 +97,6 @@ body {
   background-position: right 8px center;
   height: 32px;
   padding: 0 26px 0 8px;
-  cursor: pointer;
 }
 .lang-picker:hover { background-color: rgba(141, 141, 141, 0.24); }
 .lang-picker:focus-visible { outline: 2px solid #ffffff; outline-offset: -2px; }
@@ -113,7 +115,6 @@ body {
   font: inherit;
   color: var(--text-secondary);
   padding: 12px 16px;
-  cursor: pointer;
   border-bottom: 2px solid transparent;
 }
 .tab:hover { color: var(--text); }
@@ -161,6 +162,8 @@ main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 64px; }
 .field output { color: var(--text); font-variant-numeric: tabular-nums; }
 
 input[type="number"] {
+  -webkit-user-select: text;
+  user-select: text;
   width: 100%;
   height: 40px;
   padding: 0 12px;
@@ -177,7 +180,6 @@ input[type="range"] {
   height: 16px;
   appearance: none;
   background: transparent;
-  cursor: pointer;
 }
 input[type="range"]::-webkit-slider-runnable-track {
   height: 2px;
@@ -205,7 +207,6 @@ input[type="range"]::-moz-range-thumb {
   padding: 0 16px;
   text-align: left;
   border: none;
-  cursor: pointer;
 }
 .btn--primary { background: var(--interactive); color: #ffffff; }
 .btn--primary:hover { background: var(--interactive-hover); }
