@@ -58,81 +58,61 @@ function poisson(rand, lambda) {
 }
 
 /* ------------------------------------------------------------------ *
- * Candidate generation
+ * Your post
  * ------------------------------------------------------------------ */
-function makeAuthor(rand, mutualProb) {
+function makeActor(rand) {
   let name = WORDS[(rand() * WORDS.length) | 0];
   if (rand() < 0.5) name += WORDS[(rand() * WORDS.length) | 0];
-  return {
-    handle: "@" + name + ((rand() * 1000) | 0),
-    mutual: rand() < mutualProb,
-  };
+  return "@" + name + ((rand() * 1000) | 0);
 }
 
-function generateCandidates(config) {
+function generatePost(config) {
   const rand = mulberry32(config.seed);
-  const posts = [];
+  const content = config.content;
 
-  // Larger following -> more of the candidate pool is in-network.
-  const inNetworkShare = Math.min(0.85, Math.max(0.1, config.following / (config.following + 1500)));
-  // Balanced follower/following ratio -> more mutual follows.
-  const ratio = config.followers / Math.max(1, config.following);
-  const mutualProb = Math.min(0.6, 0.5 / (Math.abs(Math.log10(Math.max(ratio, 1e-6))) + 1));
+  // Share of your audience that follows you back; boosts the reply weight.
+  const mutualShare = Math.min(0.6, Math.min(config.followers, config.following) / Math.max(1, config.followers));
   // Bigger audiences engage slightly less per-impression.
   const audienceDamp = 1 / (1 + Math.log10(1 + config.followers) / 8);
+  // Unknowable quality of this particular post.
+  const quality = (0.3 + rand() * 0.7) * audienceDamp;
 
-  const seenAuthors = new Map();
+  // Predicted per-impression probability of each engagement action.
+  const p = {};
+  p.favorite      = rand() * 0.20 * quality;
+  p.reply         = rand() * 0.04 * quality;
+  p.retweet       = rand() * 0.06 * quality;
+  p.quote         = rand() * 0.015 * quality;
+  p.share         = rand() * 0.012 * quality;
+  p.shareDm       = rand() * 0.006 * quality;
+  p.shareCopyLink = rand() * 0.004 * quality;
+  p.followAuthor  = rand() * 0.006 * quality;
+  p.click         = rand() * 0.25 * quality;
+  p.openLink      = content.link ? rand() * 0.10 * quality : 0;
+  p.photoExpand   = content.photos > 0 ? rand() * 0.04 * content.photos * quality : 0;
+  p.videoOpen     = content.video ? rand() * 0.12 * quality : 0;
+  p.vqv           = content.video ? rand() * 0.15 * quality : 0;
+  p.quotedClick   = rand() * 0.02 * quality;
+  p.profileClick  = rand() * 0.03 * quality;
+  p.dwell         = rand() * 0.5;
+  p.notDwelled    = 0.2 + rand() * 0.6;
 
-  for (let i = 0; i < config.postCount; i++) {
-    const inNetwork = rand() < inNetworkShare;
-    const author = makeAuthor(rand, inNetwork ? mutualProb : mutualProb * 0.1);
-    const content = config.content;
-    const affinity = (inNetwork ? 0.5 + rand() * 0.5 : rand() * 0.7) * audienceDamp;
+  // Per-post multiplier on the configured negative rates; the live
+  // slider value is read every step, so mid-run changes apply.
+  const jitter = () => 0.2 + rand() * 1.6;
+  const negBias = 1 + (1 - quality) * 0.8;
+  const negFactor = {};
+  for (const key of Object.keys(NEG_RATE_KEYS)) negFactor[key] = jitter() * negBias;
 
-    // Predicted per-impression probability of each engagement action.
-    const p = {};
-    p.favorite      = rand() * 0.20 * affinity;
-    p.reply         = rand() * 0.04 * affinity;
-    p.retweet       = rand() * 0.06 * affinity;
-    p.quote         = rand() * 0.015 * affinity;
-    p.share         = rand() * 0.012 * affinity;
-    p.shareDm       = rand() * 0.006 * affinity;
-    p.shareCopyLink = rand() * 0.004 * affinity;
-    p.followAuthor  = inNetwork ? 0 : rand() * 0.008 * affinity;
-    p.click         = rand() * 0.25 * affinity;
-    p.openLink      = content.link ? rand() * 0.10 * affinity : 0;
-    p.photoExpand   = content.photos > 0 ? rand() * 0.04 * content.photos * affinity : 0;
-    p.videoOpen     = content.video ? rand() * 0.12 * affinity : 0;
-    p.vqv           = content.video ? rand() * 0.15 * affinity : 0;
-    p.quotedClick   = rand() * 0.02 * affinity;
-    p.profileClick  = rand() * 0.03 * affinity;
-    p.dwell         = rand() * 0.5;
-    p.notDwelled    = 0.2 + rand() * 0.6;
+  const counts = {};
+  for (const key of ALL_ACTION_KEYS) counts[key] = 0;
 
-    // Per-post multiplier on the configured negative rates; the live
-    // slider value is read every tick, so mid-run changes apply.
-    const jitter = () => 0.2 + rand() * 1.6;
-    const negBias = 1 + (1 - affinity) * 0.8;
-    const negFactor = {};
-    for (const key of Object.keys(NEG_RATE_KEYS)) negFactor[key] = jitter() * negBias;
-
-    // Author diversity: repeated authors decay toward a floor.
-    const priorCount = seenAuthors.get(author.handle) || 0;
-    const diversity = Math.max(W.authorFloor, Math.pow(W.authorDecay, priorCount));
-    seenAuthors.set(author.handle, priorCount + 1);
-
-    const counts = {};
-    for (const key of ALL_ACTION_KEYS) counts[key] = 0;
-
-    posts.push({
-      author, inNetwork, p, negFactor, diversity,
-      arrival: rand() * config.durationSec * 0.9,
-      impressions: 0, fracImp: 0, counts,
-      contrib: {}, score: 0,
-      arrivedLogged: false, milestoneIdx: 0,
-    });
-  }
-  return posts;
+  return {
+    p, negFactor, mutualShare,
+    impressions: 0, fracImp: 0, counts,
+    contrib: {}, score: 0,
+    milestoneIdx: 0, suppressed: false,
+  };
 }
 
 function scorePost(post) {
@@ -140,13 +120,12 @@ function scorePost(post) {
   const denom = Math.max(1, post.impressions);
   for (const key of ALL_ACTION_KEYS) {
     let weight = W[key];
-    if (key === "reply" && post.author.mutual) weight += W.bidiReplyBoost;
+    if (key === "reply") weight += W.bidiReplyBoost * post.mutualShare;
     const c = weight * (post.counts[key] / denom);
     post.contrib[key] = c;
     score += c;
   }
-  if (!post.inNetwork) score *= W.oonFactor;
-  post.score = score * post.diversity;
+  post.score = score;
 }
 
 /* ------------------------------------------------------------------ *
@@ -154,7 +133,7 @@ function scorePost(post) {
  * ------------------------------------------------------------------ */
 const SPEEDS = [1, 2, 5, 10, 20, 30, 60];
 const currentSpeed = () => SPEEDS[Number($("speed").value)] || 5;
-const RENDER_MS = 400;   // real ms between feed/timeline re-renders
+const RENDER_MS = 400;   // real ms between panel re-renders
 const MAX_STEPS = 300;   // cap sim steps per frame so slow frames never freeze the page
 
 let sim = null;
@@ -167,7 +146,6 @@ function startRun() {
     seed: (Math.random() * 2 ** 32) >>> 0,
     followers,
     following: Math.max(0, Number($("following").value) || 0),
-    postCount: Number($("postCount").value),
     durationSec,
     content: {
       photos: Number($("photos").value),
@@ -177,12 +155,13 @@ function startRun() {
   };
   sim = {
     config,
-    posts: generateCandidates(config),
+    post: generatePost(config),
     rand: mulberry32(config.seed ^ 0x9e3779b9),
     elapsed: 0,
     carry: 0,
     duration: durationSec,
-    reachPerMin: Math.min(5000, Math.max(2, followers * 0.03)),
+    baseReachPerMin: Math.min(20000, Math.max(2, followers * 0.05)),
+    history: [],
     events: [],
     eventId: 0,
     lastRenderedEventId: 0,
@@ -191,11 +170,13 @@ function startRun() {
     running: true,
     raf: 0,
   };
-  logEvent({ kind: "start" });
-  $("feed").textContent = "";
+  logEvent({ kind: "posted" });
   $("timeline").textContent = "";
   $("clock").hidden = false;
+  $("postCard").hidden = false;
   $("timelinePanel").hidden = false;
+  const empty = document.querySelector(".results-grid .empty");
+  if (empty) empty.remove();
   setRunButton(true);
   sim.raf = requestAnimationFrame(frame);
 }
@@ -205,7 +186,7 @@ function stopRun() {
     cancelAnimationFrame(sim.raf);
     sim.running = false;
     logEvent({ kind: "end" });
-    renderFeed();
+    renderPost();
     renderTimeline();
   }
   setRunButton(false);
@@ -214,7 +195,7 @@ function stopRun() {
 const EVENT_CAP = 150;
 // Only notable actions become timeline events; favorites and views
 // would flood the log.
-const EVENT_ACTIONS = ["report", "blockAuthor", "muteAuthor", "notInterested", "followAuthor", "shareCopyLink"];
+const EVENT_ACTIONS = ["followAuthor", "shareCopyLink"];
 const MILESTONES = [1000, 10000, 100000, 1000000];
 
 function logEvent(event) {
@@ -246,7 +227,9 @@ function frame() {
   updateClock();
   if (now - sim.lastRenderReal >= RENDER_MS) {
     sim.lastRenderReal = now;
-    renderFeed();
+    sim.history.push({ t: sim.elapsed, score: sim.post.score });
+    if (sim.history.length > 400) sim.history.shift();
+    renderPost();
     renderTimeline();
   }
 
@@ -254,42 +237,48 @@ function frame() {
   else sim.raf = requestAnimationFrame(frame);
 }
 
-// One simulated second for every arrived post.
+// One simulated second of your post's life. The score feeds back into
+// distribution: a well-received post spreads out of network, a
+// net-negative one is suppressed.
 function stepSim(rates) {
-  for (const post of sim.posts) {
-    if (post.arrival > sim.elapsed) continue;
-    if (!post.arrivedLogged) {
-      post.arrivedLogged = true;
-      logEvent({ kind: "posted", handle: post.author.handle });
+  const post = sim.post;
+  const age = sim.elapsed;
+  // Reach decays with age (about a 3 hour half-life) and is amplified
+  // or collapsed by the current score.
+  const decay = Math.exp(-age / (3 * 3600));
+  const amp = post.score < 0 ? 0.1 : 1 + Math.min(10, post.score * 4) * W.oonFactor;
+  const perMin = sim.baseReachPerMin * decay * amp;
+  const withCarry = perMin / 60 + post.fracImp;
+  const n = Math.floor(withCarry);
+  post.fracImp = withCarry - n;
+  if (n > 0) {
+    post.impressions += n;
+    for (const key of POSITIVE_KEYS) {
+      const hits = poisson(sim.rand, post.p[key] * n);
+      post.counts[key] += hits;
+      if (hits > 0 && EVENT_ACTIONS.includes(key)) {
+        logEvent({ kind: "action", handle: makeActor(sim.rand), action: key, count: hits });
+      }
     }
-    const age = sim.elapsed - post.arrival;
-    // Impression rate decays as the post ages (about a 3 hour half-life).
-    const perMin = sim.reachPerMin * Math.exp(-age / (3 * 3600));
-    const withCarry = perMin / 60 + post.fracImp;
-    const n = Math.floor(withCarry);
-    post.fracImp = withCarry - n;
-    if (n > 0) {
-      post.impressions += n;
-      for (const key of POSITIVE_KEYS) {
-        const hits = poisson(sim.rand, post.p[key] * n);
-        post.counts[key] += hits;
-        if (hits > 0 && EVENT_ACTIONS.includes(key)) {
-          logEvent({ kind: "action", handle: post.author.handle, action: key, count: hits });
-        }
+    post.counts.notDwelled += poisson(sim.rand, post.p.notDwelled * n);
+    for (const [key, rateKey] of Object.entries(NEG_RATE_KEYS)) {
+      const hits = poisson(sim.rand, rates[rateKey] * post.negFactor[key] * n);
+      post.counts[key] += hits;
+      if (hits > 0) {
+        logEvent({ kind: "action", handle: makeActor(sim.rand), action: key, count: hits, negative: true });
       }
-      post.counts.notDwelled += poisson(sim.rand, post.p.notDwelled * n);
-      for (const [key, rateKey] of Object.entries(NEG_RATE_KEYS)) {
-        const hits = poisson(sim.rand, rates[rateKey] * post.negFactor[key] * n);
-        post.counts[key] += hits;
-        if (hits > 0) {
-          logEvent({ kind: "action", handle: post.author.handle, action: key, count: hits, negative: true });
-        }
-      }
-      while (post.milestoneIdx < MILESTONES.length && post.impressions >= MILESTONES[post.milestoneIdx]) {
-        logEvent({ kind: "milestone", handle: post.author.handle, views: MILESTONES[post.milestoneIdx] });
-        post.milestoneIdx++;
-      }
-      scorePost(post);
+    }
+    while (post.milestoneIdx < MILESTONES.length && post.impressions >= MILESTONES[post.milestoneIdx]) {
+      logEvent({ kind: "milestone", views: MILESTONES[post.milestoneIdx] });
+      post.milestoneIdx++;
+    }
+    scorePost(post);
+    if (!post.suppressed && post.score < 0) {
+      post.suppressed = true;
+      logEvent({ kind: "suppressed", negative: true });
+    } else if (post.suppressed && post.score >= 0) {
+      post.suppressed = false;
+      logEvent({ kind: "recovered" });
     }
   }
 }
@@ -335,134 +324,64 @@ function contentLabel() {
   return parts.length ? parts.join(" · ") : t("media.text");
 }
 
-function buildPostEl(post) {
-  const el = document.createElement("article");
-  el.className = "post";
+function renderPost() {
+  if (!sim) return;
+  const post = sim.post;
 
-  const rank = document.createElement("span");
-  rank.className = "post-rank";
-
-  const main = document.createElement("div");
-  main.className = "post-main";
-
-  const head = document.createElement("div");
-  head.className = "post-head";
-  const author = document.createElement("span");
-  author.className = "post-author";
-  author.textContent = post.author.handle;
-  const meta = document.createElement("span");
-  meta.className = "post-meta";
-  head.append(author, meta);
-
-  const bar = document.createElement("div");
-  bar.className = "bar";
-  const segPos = document.createElement("span");
-  segPos.className = "bar-seg bar-seg--pos";
-  const segNeg = document.createElement("span");
-  segNeg.className = "bar-seg bar-seg--neg";
-  bar.append(segPos, segNeg);
-
-  const actions = document.createElement("div");
-  actions.className = "post-actions";
-
-  main.append(head, bar, actions);
-
-  const score = document.createElement("div");
-  score.className = "post-score";
-  const scoreVal = document.createElement("span");
-  const scoreLabel = document.createElement("span");
-  scoreLabel.className = "post-score-label";
-  score.append(scoreVal, scoreLabel);
-
-  el.append(rank, main, score);
-  post.ui = { el, rank, meta, segPos, segNeg, actions, scoreVal, scoreLabel };
-}
-
-function updatePostEl(post, rank) {
-  const ui = post.ui;
-  ui.el.classList.toggle("post--suppressed", post.score < 0);
-  ui.rank.textContent = String(rank + 1);
-  ui.meta.textContent = [
-    post.inNetwork ? t("meta.inNetwork") : t("meta.outNetwork"),
-    post.author.mutual ? t("meta.mutual") : null,
+  $("postMeta").textContent = [
     contentLabel(),
     fmtCompact(post.impressions) + " " + t("meta.views"),
-  ].filter(Boolean).join(" · ");
+  ].join(" · ");
+
+  const scoreVal = $("postScore");
+  scoreVal.className = "post-score-value" + (post.score < 0 ? " post-score-value--neg" : "");
+  scoreVal.textContent = fmt(post.score);
+  $("postScoreLabel").textContent = post.score < 0 ? t("post.suppressed") : t("post.score");
 
   let pos = 0, neg = 0;
   for (const c of Object.values(post.contrib)) c >= 0 ? (pos += c) : (neg += -c);
   const total = pos + neg || 1;
-  ui.segPos.style.width = (pos / total * 100).toFixed(1) + "%";
-  ui.segNeg.style.width = (neg / total * 100).toFixed(1) + "%";
+  $("barPos").style.width = (pos / total * 100).toFixed(1) + "%";
+  $("barNeg").style.width = (neg / total * 100).toFixed(1) + "%";
 
   const top = Object.entries(post.contrib)
     .filter(([key, c]) => Math.abs(c) > 0.0005 && post.counts[key] > 0)
     .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
-    .slice(0, 5);
-  ui.actions.textContent = "";
+    .slice(0, 8);
+  const actions = $("postActions");
+  actions.textContent = "";
   for (const [key, c] of top) {
     const chip = document.createElement("span");
     if (c < 0) chip.className = "neg";
     chip.textContent = actionLabel(key) + " " + fmtCompact(post.counts[key]) + " (" + (c >= 0 ? "+" : "−") + fmt(Math.abs(c)) + ")";
-    ui.actions.append(chip);
+    actions.append(chip);
   }
 
-  ui.scoreVal.className = "post-score-value" + (post.score < 0 ? " post-score-value--neg" : "");
-  ui.scoreVal.textContent = fmt(post.score);
-  ui.scoreLabel.textContent = post.score < 0 ? t("post.suppressed") : t("post.score");
-}
+  // Score history sparkline.
+  const svg = $("sparkline");
+  const h = sim.history;
+  if (h.length > 1) {
+    let min = 0, max = 0;
+    for (const pt of h) { if (pt.score < min) min = pt.score; if (pt.score > max) max = pt.score; }
+    const span = max - min || 1;
+    const points = h.map((pt, i) =>
+      (i / (h.length - 1) * 300).toFixed(1) + "," + (56 - ((pt.score - min) / span) * 52 + 2).toFixed(1)
+    ).join(" ");
+    $("sparkPath").setAttribute("points", points);
+    const zeroY = 56 - ((0 - min) / span) * 52 + 2;
+    const zero = $("sparkZero");
+    zero.setAttribute("y1", zeroY.toFixed(1));
+    zero.setAttribute("y2", zeroY.toFixed(1));
+  }
 
-function renderFeed() {
-  if (!sim) return;
-  const feed = $("feed");
-
-  const arrived = sim.posts.filter((p) => p.arrival <= sim.elapsed);
-  arrived.sort((a, b) => b.score - a.score);
-
-  const shown = arrived.filter((p) => p.score >= 0);
-  const inNet = arrived.filter((p) => p.inNetwork).length;
-  const scores = arrived.map((p) => p.score).sort((a, b) => a - b);
-  const median = scores.length ? scores[(scores.length / 2) | 0] : 0;
-
+  // Stats: views, engagements, new followers, score.
+  let engagements = 0;
+  for (const key of POSITIVE_KEYS) if (key !== "dwell") engagements += post.counts[key];
   $("stats").hidden = false;
-  $("statShown").textContent = String(shown.length);
-  $("statSuppressed").textContent = String(arrived.length - shown.length);
-  $("statInNetwork").textContent = arrived.length ? pct(inNet / arrived.length) : "0%";
-  $("statMedian").textContent = fmt(median);
-
-  if (!arrived.length) return;
-  const empty = feed.querySelector(".empty");
-  if (empty) empty.remove();
-
-  // FLIP: record positions, reorder, then animate each node from its
-  // old position to its new one instead of snapping.
-  const oldTops = new Map();
-  for (const post of arrived) {
-    if (post.ui && post.ui.el.isConnected) oldTops.set(post, post.ui.el.getBoundingClientRect().top);
-  }
-  arrived.forEach((post, i) => {
-    if (!post.ui) buildPostEl(post);
-    updatePostEl(post, i);
-    feed.append(post.ui.el);
-  });
-  for (const post of arrived) {
-    const el = post.ui.el;
-    const oldTop = oldTops.get(post);
-    if (oldTop === undefined) {
-      el.classList.add("post--enter");
-      requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove("post--enter")));
-      continue;
-    }
-    const delta = oldTop - el.getBoundingClientRect().top;
-    if (delta) {
-      el.style.transition = "none";
-      el.style.transform = "translateY(" + delta + "px)";
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        el.style.transition = "";
-        el.style.transform = "";
-      }));
-    }
-  }
+  $("statViews").textContent = fmtCompact(post.impressions);
+  $("statEngagements").textContent = fmtCompact(engagements);
+  $("statFollowers").textContent = fmtCompact(post.counts.followAuthor);
+  $("statScore").textContent = fmt(post.score);
 }
 
 function buildTimelineItem(ev) {
@@ -475,10 +394,11 @@ function buildTimelineItem(ev) {
 
   const text = document.createElement("span");
   text.className = "timeline-text";
-  if (ev.kind === "start") text.textContent = t("event.start");
+  if (ev.kind === "posted") text.textContent = t("event.posted");
   else if (ev.kind === "end") text.textContent = t("event.end");
-  else if (ev.kind === "posted") text.textContent = ev.handle + " · " + t("event.posted");
-  else if (ev.kind === "milestone") text.textContent = ev.handle + " · " + fmtCompact(ev.views) + " " + t("meta.views");
+  else if (ev.kind === "suppressed") text.textContent = t("event.suppressed");
+  else if (ev.kind === "recovered") text.textContent = t("event.recovered");
+  else if (ev.kind === "milestone") text.textContent = fmtCompact(ev.views) + " " + t("meta.views");
   else text.textContent = ev.handle + " · " + actionLabel(ev.action) + (ev.count > 1 ? " ×" + ev.count : "");
 
   li.append(time, text);
@@ -588,7 +508,7 @@ function applyLanguage() {
   });
   $("langPicker").value = lang;
   renderWeights();
-  renderFeed();
+  renderPost();
   rebuildTimeline();
 }
 
@@ -618,7 +538,6 @@ function updateControlOutputs() {
     const v = Number($("rate" + id).value) * RATE_SCALE;
     $("rate" + id + "Value").textContent = (v * 100).toFixed(3) + "%";
   }
-  $("postCountValue").textContent = $("postCount").value;
   $("photosValue").textContent = $("photos").value;
   $("speedValue").textContent = currentSpeed() + "×";
   const mins = Number($("duration").value);

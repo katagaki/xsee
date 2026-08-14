@@ -36,11 +36,7 @@
             <input type="number" id="following" min="0" max="100000000" value="480">
           </div>
 
-          <h2 class="section-title" data-i18n="section.feed">Feed</h2>
-          <div class="field">
-            <label for="postCount"><span data-i18n="field.postCount">Candidate posts</span> <output id="postCountValue">30</output></label>
-            <input type="range" id="postCount" min="10" max="100" step="5" value="30">
-          </div>
+          <h2 class="section-title" data-i18n="section.sim">Simulation</h2>
           <div class="field">
             <label for="duration"><span data-i18n="field.duration">Duration</span> <output id="durationValue">2:00</output></label>
             <input type="range" id="duration" min="30" max="1440" step="30" value="120">
@@ -95,14 +91,33 @@
             <div class="clock-bar"><div class="clock-fill" id="clockFill"></div></div>
           </div>
           <div class="stats" id="stats" hidden>
-            <div class="stat"><span class="stat-label" data-i18n="stat.shown">Shown</span><span class="stat-value" id="statShown">-</span></div>
-            <div class="stat"><span class="stat-label" data-i18n="stat.suppressed">Suppressed</span><span class="stat-value" id="statSuppressed">-</span></div>
-            <div class="stat"><span class="stat-label" data-i18n="stat.inNetwork">In-network</span><span class="stat-value" id="statInNetwork">-</span></div>
-            <div class="stat"><span class="stat-label" data-i18n="stat.median">Median score</span><span class="stat-value" id="statMedian">-</span></div>
+            <div class="stat"><span class="stat-label" data-i18n="stat.views">Views</span><span class="stat-value" id="statViews">-</span></div>
+            <div class="stat"><span class="stat-label" data-i18n="stat.engagements">Engagements</span><span class="stat-value" id="statEngagements">-</span></div>
+            <div class="stat"><span class="stat-label" data-i18n="stat.followers">New followers</span><span class="stat-value" id="statFollowers">-</span></div>
+            <div class="stat"><span class="stat-label" data-i18n="stat.score">Score</span><span class="stat-value" id="statScore">-</span></div>
           </div>
           <div class="results-grid">
-            <div id="feed" class="feed">
-              <p class="empty" data-i18n="feed.empty">Start a simulation to rank a candidate feed over time.</p>
+            <div class="results-main">
+              <p class="empty" data-i18n="feed.empty">Start a simulation to see how your post performs.</p>
+              <article class="post-card" id="postCard" hidden>
+                <div class="post-head">
+                  <span class="post-author" data-i18n="post.you">Your post</span>
+                  <span class="post-meta" id="postMeta"></span>
+                </div>
+                <div class="post-score-row">
+                  <span id="postScore" class="post-score-value">0.00</span>
+                  <span id="postScoreLabel" class="post-score-label"></span>
+                </div>
+                <svg id="sparkline" viewBox="0 0 300 60" preserveAspectRatio="none" aria-hidden="true">
+                  <line id="sparkZero" x1="0" x2="300" y1="58" y2="58"></line>
+                  <polyline id="sparkPath" points=""></polyline>
+                </svg>
+                <div class="bar">
+                  <span id="barPos" class="bar-seg bar-seg--pos"></span>
+                  <span id="barNeg" class="bar-seg bar-seg--neg"></span>
+                </div>
+                <div id="postActions" class="post-actions"></div>
+              </article>
             </div>
             <aside class="timeline" id="timelinePanel" hidden>
               <h2 class="section-title" data-i18n="section.timeline">Timeline</h2>
