@@ -54,6 +54,7 @@
       { "key": "videoOpen",     "value": 0.05 },
       { "key": "vqv",           "value": 0.05 },
       { "key": "quotedClick",   "value": 0.05 },
+      { "key": "quotedVqv",     "value": 0.0 },
       { "key": "profileClick",  "value": 0.0 },
       { "key": "dwell",         "value": 0.0 }
     ],
@@ -66,12 +67,23 @@
     ],
     "modifiers": [
       { "key": "bidiReplyBoost", "value": 15.0 },
+      { "key": "bidiDwellBoost", "value": 0.0 },
       { "key": "oonFactor",      "value": 0.75 },
       { "key": "topicOonFactor", "value": 0.5 },
       { "key": "authorDecay",    "value": 0.5 },
       { "key": "authorFloor",    "value": 0.25 },
       { "key": "unexplored",     "value": 0.02 },
       { "key": "contDwellTime",  "value": 0.004 }
+    ],
+    "inactive": [
+      { "key": "multUnexploredAlpha", "value": 0.0 },
+      { "key": "contClickDwellTime",  "value": 0.0 },
+      { "key": "activeSecs5mNorm",    "value": 0.0 },
+      { "key": "clickDwellBaseline",  "value": 0.01 },
+      { "key": "clickDwellAlpha",     "value": 0.5 },
+      { "key": "clickDwellFloor",     "value": 0.01 },
+      { "key": "clickDwellCap",       "value": 1.0 },
+      { "key": "dwellRegretTemp",     "value": 10.0 }
     ]
   }
 }

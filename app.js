@@ -13,10 +13,12 @@ const t = (key) => (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.en[key] || k
 
 /* ------------------------------------------------------------------ *
  * Scoring weights, sourced from the public feed ranking configuration
- * (home-mixer/params/param.rs).
+ * (home-mixer/params/param.rs). Upstream weights multiply the predicted
+ * probability of each action, not raw engagement counts, so scorePost
+ * divides observed counts by impressions before weighting.
  * ------------------------------------------------------------------ */
 let WORDS = [];
-let WEIGHTS = { positive: [], negative: [], modifiers: [] };
+let WEIGHTS = { positive: [], negative: [], modifiers: [], inactive: [] };
 const W = {};
 let POSITIVE_KEYS = [];
 const NEG_RATE_KEYS = { report: "report", blockAuthor: "block", muteAuthor: "mute", notInterested: "notInterested" };
@@ -93,6 +95,7 @@ function generatePost(config) {
   p.videoOpen     = content.video ? rand() * 0.12 * quality : 0;
   p.vqv           = content.video ? rand() * 0.15 * quality : 0;
   p.quotedClick   = rand() * 0.02 * quality;
+  p.quotedVqv     = content.video ? rand() * 0.03 * quality : 0;
   p.profileClick  = rand() * 0.03 * quality;
   p.dwell         = rand() * 0.5;
   p.notDwelled    = 0.2 + rand() * 0.6;
@@ -439,6 +442,7 @@ function renderWeights() {
     { title: t("weights.groupPositive"), rows: WEIGHTS.positive, prefix: "action.", note: t("weights.notePositive") },
     { title: t("weights.groupNegative"), rows: WEIGHTS.negative, prefix: "action.", note: t("weights.noteNegative") },
     { title: t("weights.groupModifiers"), rows: WEIGHTS.modifiers, prefix: "mod.", note: t("weights.noteModifiers") },
+    { title: t("weights.groupInactive"), rows: WEIGHTS.inactive, prefix: "mod.", note: t("weights.noteInactive") },
   ];
 
   for (const group of groups) {
