@@ -112,7 +112,7 @@ function generatePost(config) {
 
   return {
     p, negFactor, mutualShare,
-    impressions: 0, fracImp: 0, counts,
+    impressions: 0, verifiedViews: 0, verifiedViewCarry: 0, fracImp: 0, counts,
     contrib: {}, score: 0,
     milestoneIdx: 0, suppressed: false,
   };
@@ -143,12 +143,17 @@ let sim = null;
 
 function startRun() {
   if (!WORDS.length) return;
-  const followers = Math.max(0, Number($("followers").value) || 0);
+  const followers = readCount("followers");
+  const verifiedFollowers = Math.min(followers, readCount("verifiedFollowers"));
+  $("verifiedFollowers").value = verifiedFollowers;
   const durationSec = Number($("duration").value) * 60;
   const config = {
     seed: (Math.random() * 2 ** 32) >>> 0,
     followers,
-    following: Math.max(0, Number($("following").value) || 0),
+    following: readCount("following"),
+    verifiedFollowers,
+    accountFlags: readCount("accountFlags"),
+    postFlags: readCount("postFlags"),
     durationSec,
     content: {
       photos: Number($("photos").value),
@@ -246,16 +251,24 @@ function frame() {
 function stepSim(rates) {
   const post = sim.post;
   const age = sim.elapsed;
-  // Reach decays with age (about a 3 hour half-life) and is amplified
-  // or collapsed by the current score.
+  // Ranking and visibility are separate upstream. This illustrative
+  // reach model lets follower delivery continue when a configured
+  // recommendation-limiting label blocks non-follower delivery.
   const decay = Math.exp(-age / (3 * 3600));
-  const amp = post.score < 0 ? 0.1 : 1 + Math.min(10, post.score * 4) * W.oonFactor;
-  const perMin = sim.baseReachPerMin * decay * amp;
+  const followerPerMin = sim.baseReachPerMin * decay * (post.score < 0 ? 0.1 : 1);
+  const canRecommend = sim.config.accountFlags === 0 && sim.config.postFlags === 0 && post.score > 0;
+  const nonFollowerPerMin = canRecommend ? sim.baseReachPerMin * decay * Math.min(10, post.score * 4) * W.oonFactor : 0;
+  const perMin = followerPerMin + nonFollowerPerMin;
   const withCarry = perMin / 60 + post.fracImp;
   const n = Math.floor(withCarry);
   post.fracImp = withCarry - n;
   if (n > 0) {
     post.impressions += n;
+    const followerViews = Math.min(n, Math.round(n * followerPerMin / perMin));
+    post.verifiedViewCarry += followerViews * sim.config.verifiedFollowers / Math.max(1, sim.config.followers);
+    const verifiedViews = Math.floor(post.verifiedViewCarry);
+    post.verifiedViews += verifiedViews;
+    post.verifiedViewCarry -= verifiedViews;
     for (const key of POSITIVE_KEYS) {
       const hits = poisson(sim.rand, post.p[key] * n);
       post.counts[key] += hits;
@@ -334,7 +347,8 @@ function renderPost() {
   $("postMeta").textContent = [
     contentLabel(),
     fmtCompact(post.impressions) + " " + t("meta.views"),
-  ].join(" · ");
+    sim.config.accountFlags + sim.config.postFlags > 0 ? t("post.limited") : null,
+  ].filter(Boolean).join(" · ");
 
   const scoreVal = $("postScore");
   scoreVal.className = "post-score-value" + (post.score < 0 ? " post-score-value--neg" : "");
@@ -382,6 +396,7 @@ function renderPost() {
   for (const key of POSITIVE_KEYS) if (key !== "dwell") engagements += post.counts[key];
   $("stats").hidden = false;
   $("statViews").textContent = fmtCompact(post.impressions);
+  $("statVerifiedViews").textContent = fmtCompact(post.verifiedViews);
   $("statEngagements").textContent = fmtCompact(engagements);
   $("statFollowers").textContent = fmtCompact(post.counts.followAuthor);
   $("statScore").textContent = fmt(post.score);
@@ -527,6 +542,13 @@ $("langPicker").addEventListener("change", (e) => {
  * ------------------------------------------------------------------ */
 const RATE_SCALE = 0.00005; // slider 0..100 -> probability 0..0.5%
 const RATE_IDS = ["Report", "Block", "Mute", "NotInterested"];
+
+function readCount(id) {
+  const input = $(id);
+  const value = Math.min(Number(input.max), Math.max(0, Math.floor(Number(input.value) || 0)));
+  input.value = value;
+  return value;
+}
 
 function readRates() {
   const rates = {};

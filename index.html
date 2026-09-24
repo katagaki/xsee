@@ -35,6 +35,16 @@
             <label for="following" data-i18n="field.following">Following</label>
             <input type="number" id="following" min="0" max="100000000" value="480">
           </div>
+          <div class="field">
+            <label for="verifiedFollowers" data-i18n="field.verifiedFollowers">Verified followers</label>
+            <input type="number" id="verifiedFollowers" min="0" max="100000000" value="120">
+          </div>
+          <p class="field-note" data-i18n="note.verified">Used to estimate verified follower views, not as a ranking boost.</p>
+          <div class="field">
+            <label for="accountFlags" data-i18n="field.accountFlags">Account visibility flags</label>
+            <input type="number" id="accountFlags" min="0" max="1000" value="0">
+          </div>
+          <p class="field-note" data-i18n="note.flags">A flag represents a visibility label that limits recommendations. One or more flags blocks simulated non-follower reach.</p>
 
           <h2 class="section-title" data-i18n="section.sim">Simulation</h2>
           <div class="field">
@@ -58,6 +68,10 @@
           <div class="check">
             <label for="hasLink" data-i18n="field.link">Link</label>
             <input type="checkbox" id="hasLink">
+          </div>
+          <div class="field">
+            <label for="postFlags" data-i18n="field.postFlags">Post visibility flags</label>
+            <input type="number" id="postFlags" min="0" max="1000" value="0">
           </div>
 
           <h2 class="section-title" data-i18n="section.rates">Negative feedback rates</h2>
@@ -92,6 +106,7 @@
           </div>
           <div class="stats" id="stats" hidden>
             <div class="stat"><span class="stat-label" data-i18n="stat.views">Views</span><span class="stat-value" id="statViews">-</span></div>
+            <div class="stat"><span class="stat-label" data-i18n="stat.verifiedViews">Verified follower views</span><span class="stat-value" id="statVerifiedViews">-</span></div>
             <div class="stat"><span class="stat-label" data-i18n="stat.engagements">Engagements</span><span class="stat-value" id="statEngagements">-</span></div>
             <div class="stat"><span class="stat-label" data-i18n="stat.followers">New followers</span><span class="stat-value" id="statFollowers">-</span></div>
             <div class="stat"><span class="stat-label" data-i18n="stat.score">Score</span><span class="stat-value" id="statScore">-</span></div>
