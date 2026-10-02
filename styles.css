@@ -344,6 +344,11 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--focus); outline-
 .xpost-name { font-weight: 700; color: var(--text); }
 .xpost-handle, .xpost-time { color: var(--text-secondary); }
 .xpost-time::before { content: "· "; }
+.xpost-text {
+  font-size: 15px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
 .xpost-media { display: flex; flex-direction: column; gap: 8px; }
 .xpost-photos {
   display: grid;

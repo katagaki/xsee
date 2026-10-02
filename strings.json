@@ -99,7 +99,8 @@
     "time.s": "s",
     "time.m": "m",
     "time.h": "h",
-    "post.linkDomain": "example.com"
+    "post.linkDomain": "example.com",
+    "post.sample": "May the Force be with you."
   },
   "ja": {
     "tab.simulator": "シミュレーター",
@@ -201,6 +202,7 @@
     "time.s": "秒",
     "time.m": "分",
     "time.h": "時間",
-    "post.linkDomain": "example.com"
+    "post.linkDomain": "example.com",
+    "post.sample": "フォースと共にあらんことを。"
   }
 }
