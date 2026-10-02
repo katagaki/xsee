@@ -100,7 +100,7 @@
     "time.m": "m",
     "time.h": "h",
     "post.linkDomain": "example.com",
-    "post.sample": "Houston, we have a problem."
+    "post.sample": "Strange things are afoot at the Circle K."
   },
   "ja": {
     "tab.simulator": "シミュレーター",
@@ -203,6 +203,6 @@
     "time.m": "分",
     "time.h": "時間",
     "post.linkDomain": "example.com",
-    "post.sample": "ヒューストン、問題が発生した。"
+    "post.sample": "サークルKで妙なことが起きてるぞ。"
   }
 }
