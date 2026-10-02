@@ -24,121 +24,133 @@
   <main>
     <!-- ============ SIMULATOR ============ -->
     <section id="panel-simulator" class="panel" role="tabpanel">
-      <div class="layout">
-        <aside class="controls">
-          <h2 class="section-title" data-i18n="section.account">Account</h2>
-          <div class="field">
-            <label for="followers" data-i18n="field.followers">Followers</label>
-            <input type="number" id="followers" min="0" max="100000000" value="1250">
+      <!-- ============ SETTINGS VIEW ============ -->
+      <div class="settings" id="settingsView">
+        <div class="settings-grid">
+          <div class="settings-group">
+            <h2 class="section-title" data-i18n="section.account">Account</h2>
+            <div class="field">
+              <label for="followers" data-i18n="field.followers">Followers</label>
+              <input type="number" id="followers" min="0" max="100000000" value="1250">
+            </div>
+            <div class="field">
+              <label for="following" data-i18n="field.following">Following</label>
+              <input type="number" id="following" min="0" max="100000000" value="480">
+            </div>
+            <div class="field">
+              <label for="verifiedFollowers" data-i18n="field.verifiedFollowers">Verified followers</label>
+              <input type="number" id="verifiedFollowers" min="0" max="100000000" value="120">
+            </div>
+            <p class="field-note" data-i18n="note.verified">Used to estimate verified follower views, not as a ranking boost.</p>
+            <div class="field">
+              <label for="accountFlags" data-i18n="field.accountFlags">Account visibility flags</label>
+              <input type="number" id="accountFlags" min="0" max="1000" value="0">
+            </div>
+            <p class="field-note" data-i18n="note.flags">A flag represents a visibility label that limits recommendations. One or more flags blocks simulated non-follower reach.</p>
           </div>
-          <div class="field">
-            <label for="following" data-i18n="field.following">Following</label>
-            <input type="number" id="following" min="0" max="100000000" value="480">
-          </div>
-          <div class="field">
-            <label for="verifiedFollowers" data-i18n="field.verifiedFollowers">Verified followers</label>
-            <input type="number" id="verifiedFollowers" min="0" max="100000000" value="120">
-          </div>
-          <p class="field-note" data-i18n="note.verified">Used to estimate verified follower views, not as a ranking boost.</p>
-          <div class="field">
-            <label for="accountFlags" data-i18n="field.accountFlags">Account visibility flags</label>
-            <input type="number" id="accountFlags" min="0" max="1000" value="0">
-          </div>
-          <p class="field-note" data-i18n="note.flags">A flag represents a visibility label that limits recommendations. One or more flags blocks simulated non-follower reach.</p>
 
-          <h2 class="section-title" data-i18n="section.sim">Simulation</h2>
-          <div class="field">
-            <label for="duration"><span data-i18n="field.duration">Duration</span> <output id="durationValue">2:00</output></label>
-            <input type="range" id="duration" min="30" max="1440" step="30" value="120">
+          <div class="settings-group">
+            <h2 class="section-title" data-i18n="section.post">Post content</h2>
+            <div class="field">
+              <label for="photos"><span data-i18n="field.photos">Photos</span> <output id="photosValue">0</output></label>
+              <input type="range" id="photos" min="0" max="4" step="1" value="0">
+            </div>
+            <div class="check">
+              <label for="hasVideo" data-i18n="field.video">Video</label>
+              <input type="checkbox" id="hasVideo">
+            </div>
+            <div class="check">
+              <label for="hasLink" data-i18n="field.link">Link</label>
+              <input type="checkbox" id="hasLink">
+            </div>
+            <div class="field">
+              <label for="postFlags" data-i18n="field.postFlags">Post visibility flags</label>
+              <input type="number" id="postFlags" min="0" max="1000" value="0">
+            </div>
           </div>
-          <div class="field">
+
+          <div class="settings-group">
+            <h2 class="section-title" data-i18n="section.rates">Negative feedback rates</h2>
+            <div class="field">
+              <label for="rateReport"><span data-i18n="action.report">Report</span> <output id="rateReportValue">0.000%</output></label>
+              <input type="range" id="rateReport" min="0" max="100" step="1" value="0">
+            </div>
+            <div class="field">
+              <label for="rateBlock"><span data-i18n="rate.block">Block</span> <output id="rateBlockValue">0.000%</output></label>
+              <input type="range" id="rateBlock" min="0" max="100" step="1" value="0">
+            </div>
+            <div class="field">
+              <label for="rateMute"><span data-i18n="rate.mute">Mute</span> <output id="rateMuteValue">0.000%</output></label>
+              <input type="range" id="rateMute" min="0" max="100" step="1" value="0">
+            </div>
+            <div class="field">
+              <label for="rateNotInterested"><span data-i18n="action.notInterested">Not interested</span> <output id="rateNotInterestedValue">0.005%</output></label>
+              <input type="range" id="rateNotInterested" min="0" max="100" step="1" value="1">
+            </div>
+            <button id="randomizeRates" class="btn btn--secondary btn--block" data-i18n="button.randomize">Randomize rates</button>
+          </div>
+
+          <div class="settings-group">
+            <h2 class="section-title" data-i18n="section.sim">Simulation</h2>
+            <div class="field">
+              <label for="duration"><span data-i18n="field.duration">Duration</span> <output id="durationValue">2:00</output></label>
+              <input type="range" id="duration" min="30" max="1440" step="30" value="120">
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-actions">
+          <button id="start" class="btn btn--primary" data-i18n="button.run">Start simulation</button>
+        </div>
+      </div>
+
+      <!-- ============ SIMULATION VIEW ============ -->
+      <div class="results" id="simView" hidden>
+        <div class="sim-bar">
+          <div class="clock">
+            <span class="clock-time" id="clockTime">0:00:00</span>
+            <div class="clock-bar"><div class="clock-fill" id="clockFill"></div></div>
+          </div>
+          <div class="field sim-speed">
             <label for="speed"><span data-i18n="field.speed">Speed</span> <output id="speedValue">5×</output></label>
             <input type="range" id="speed" min="0" max="6" step="1" value="2">
           </div>
-
-          <h2 class="section-title" data-i18n="section.post">Post content</h2>
-          <div class="field">
-            <label for="photos"><span data-i18n="field.photos">Photos</span> <output id="photosValue">0</output></label>
-            <input type="range" id="photos" min="0" max="4" step="1" value="0">
+          <div class="sim-actions">
+            <button id="editSettings" class="btn btn--secondary" data-i18n="button.settings">Edit settings</button>
+            <button id="run" class="btn btn--danger" data-i18n="button.stop">Stop simulation</button>
           </div>
-          <div class="check">
-            <label for="hasVideo" data-i18n="field.video">Video</label>
-            <input type="checkbox" id="hasVideo">
-          </div>
-          <div class="check">
-            <label for="hasLink" data-i18n="field.link">Link</label>
-            <input type="checkbox" id="hasLink">
-          </div>
-          <div class="field">
-            <label for="postFlags" data-i18n="field.postFlags">Post visibility flags</label>
-            <input type="number" id="postFlags" min="0" max="1000" value="0">
-          </div>
-
-          <h2 class="section-title" data-i18n="section.rates">Negative feedback rates</h2>
-          <div class="field">
-            <label for="rateReport"><span data-i18n="action.report">Report</span> <output id="rateReportValue">0.000%</output></label>
-            <input type="range" id="rateReport" min="0" max="100" step="1" value="0">
-          </div>
-          <div class="field">
-            <label for="rateBlock"><span data-i18n="rate.block">Block</span> <output id="rateBlockValue">0.000%</output></label>
-            <input type="range" id="rateBlock" min="0" max="100" step="1" value="0">
-          </div>
-          <div class="field">
-            <label for="rateMute"><span data-i18n="rate.mute">Mute</span> <output id="rateMuteValue">0.000%</output></label>
-            <input type="range" id="rateMute" min="0" max="100" step="1" value="0">
-          </div>
-          <div class="field">
-            <label for="rateNotInterested"><span data-i18n="action.notInterested">Not interested</span> <output id="rateNotInterestedValue">0.005%</output></label>
-            <input type="range" id="rateNotInterested" min="0" max="100" step="1" value="1">
-          </div>
-
-          <div class="actions">
-            <button id="randomizeRates" class="btn btn--secondary" data-i18n="button.randomize">Randomize rates</button>
-            <button id="run" class="btn btn--primary" data-i18n="button.run">Run simulation</button>
-          </div>
-        </aside>
-
-        <div class="results">
-          <div class="clock" id="clock" hidden>
-            <span class="clock-time" id="clockTime">0:00:00</span>
-            <span class="clock-speed" id="clockSpeed">5×</span>
-            <div class="clock-bar"><div class="clock-fill" id="clockFill"></div></div>
-          </div>
-          <div class="stats" id="stats" hidden>
-            <div class="stat"><span class="stat-label" data-i18n="stat.views">Views</span><span class="stat-value" id="statViews">-</span></div>
-            <div class="stat"><span class="stat-label" data-i18n="stat.verifiedViews">Verified follower views</span><span class="stat-value" id="statVerifiedViews">-</span></div>
-            <div class="stat"><span class="stat-label" data-i18n="stat.engagements">Engagements</span><span class="stat-value" id="statEngagements">-</span></div>
-            <div class="stat"><span class="stat-label" data-i18n="stat.followers">New followers</span><span class="stat-value" id="statFollowers">-</span></div>
-            <div class="stat"><span class="stat-label" data-i18n="stat.score">Score</span><span class="stat-value" id="statScore">-</span></div>
-          </div>
-          <div class="results-grid">
-            <div class="results-main">
-              <p class="empty" data-i18n="feed.empty">Start a simulation to see how your post performs.</p>
-              <article class="post-card" id="postCard" hidden>
-                <div class="post-head">
-                  <span class="post-author" data-i18n="post.you">Your post</span>
-                  <span class="post-meta" id="postMeta"></span>
-                </div>
-                <div class="post-score-row">
-                  <span id="postScore" class="post-score-value">0.00</span>
-                  <span id="postScoreLabel" class="post-score-label"></span>
-                </div>
-                <svg id="sparkline" viewBox="0 0 300 60" preserveAspectRatio="none" aria-hidden="true">
-                  <line id="sparkZero" x1="0" x2="300" y1="58" y2="58"></line>
-                  <polyline id="sparkPath" points=""></polyline>
-                </svg>
-                <div class="bar">
-                  <span id="barPos" class="bar-seg bar-seg--pos"></span>
-                  <span id="barNeg" class="bar-seg bar-seg--neg"></span>
-                </div>
-                <div id="postActions" class="post-actions"></div>
-              </article>
+        </div>
+        <div class="stats" id="stats">
+          <div class="stat"><span class="stat-label" data-i18n="stat.views">Views</span><span class="stat-value" id="statViews">-</span></div>
+          <div class="stat"><span class="stat-label" data-i18n="stat.verifiedViews">Verified follower views</span><span class="stat-value" id="statVerifiedViews">-</span></div>
+          <div class="stat"><span class="stat-label" data-i18n="stat.engagements">Engagements</span><span class="stat-value" id="statEngagements">-</span></div>
+          <div class="stat"><span class="stat-label" data-i18n="stat.followers">New followers</span><span class="stat-value" id="statFollowers">-</span></div>
+          <div class="stat"><span class="stat-label" data-i18n="stat.score">Score</span><span class="stat-value" id="statScore">-</span></div>
+        </div>
+        <div class="results-grid">
+          <article class="post-card" id="postCard">
+            <div class="post-head">
+              <span class="post-author" data-i18n="post.you">Your post</span>
+              <span class="post-meta" id="postMeta"></span>
             </div>
-            <aside class="timeline" id="timelinePanel" hidden>
-              <h2 class="section-title" data-i18n="section.timeline">Timeline</h2>
-              <ol id="timeline" class="timeline-list"></ol>
-            </aside>
-          </div>
+            <div class="post-score-row">
+              <span id="postScore" class="post-score-value">0.00</span>
+              <span id="postScoreLabel" class="post-score-label"></span>
+            </div>
+            <svg id="sparkline" viewBox="0 0 300 60" preserveAspectRatio="none" aria-hidden="true">
+              <line id="sparkZero" x1="0" x2="300" y1="58" y2="58"></line>
+              <polyline id="sparkPath" points=""></polyline>
+            </svg>
+            <div class="bar">
+              <span id="barPos" class="bar-seg bar-seg--pos"></span>
+              <span id="barNeg" class="bar-seg bar-seg--neg"></span>
+            </div>
+            <div id="postActions" class="post-actions"></div>
+          </article>
+          <aside class="timeline">
+            <h2 class="section-title" data-i18n="section.timeline">Timeline</h2>
+            <ol id="timeline" class="timeline-list"></ol>
+          </aside>
         </div>
       </div>
     </section>

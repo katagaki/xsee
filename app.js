@@ -100,8 +100,7 @@ function generatePost(config) {
   p.dwell         = rand() * 0.5;
   p.notDwelled    = 0.2 + rand() * 0.6;
 
-  // Per-post multiplier on the configured negative rates; the live
-  // slider value is read every step, so mid-run changes apply.
+  // Per-post multiplier on the configured negative rates.
   const jitter = () => 0.2 + rand() * 1.6;
   const negBias = 1 + (1 - quality) * 0.8;
   const negFactor = {};
@@ -180,12 +179,12 @@ function startRun() {
   };
   logEvent({ kind: "posted" });
   $("timeline").textContent = "";
-  $("clock").hidden = false;
-  $("postCard").hidden = false;
-  $("timelinePanel").hidden = false;
-  const empty = document.querySelector(".results-grid .empty");
-  if (empty) empty.remove();
+  $("sparkPath").setAttribute("points", "");
+  showView("sim");
   setRunButton(true);
+  updateClock();
+  renderPost();
+  renderTimeline();
   sim.raf = requestAnimationFrame(frame);
 }
 
@@ -301,9 +300,16 @@ function stepSim(rates) {
 
 function setRunButton(running) {
   const btn = $("run");
-  btn.dataset.i18n = running ? "button.stop" : "button.run";
+  btn.dataset.i18n = running ? "button.stop" : "button.rerun";
   btn.textContent = t(btn.dataset.i18n);
   btn.classList.toggle("btn--danger", running);
+  btn.classList.toggle("btn--primary", !running);
+}
+
+function showView(view) {
+  $("settingsView").hidden = view !== "settings";
+  $("simView").hidden = view !== "sim";
+  window.scrollTo(0, 0);
 }
 
 function fmtHMS(sec) {
@@ -316,7 +322,6 @@ function fmtHMS(sec) {
 
 function updateClock() {
   if (!sim) return;
-  $("clockSpeed").textContent = currentSpeed() + "×";
   $("clockTime").textContent = fmtHMS(sim.elapsed) + " / " + fmtHMS(sim.duration);
   $("clockFill").style.width = ((sim.elapsed / sim.duration) * 100).toFixed(2) + "%";
 }
@@ -394,7 +399,6 @@ function renderPost() {
   // Stats: views, engagements, new followers, score.
   let engagements = 0;
   for (const key of POSITIVE_KEYS) if (key !== "dwell") engagements += post.counts[key];
-  $("stats").hidden = false;
   $("statViews").textContent = fmtCompact(post.impressions);
   $("statVerifiedViews").textContent = fmtCompact(post.verifiedViews);
   $("statEngagements").textContent = fmtCompact(engagements);
@@ -594,9 +598,14 @@ document.querySelectorAll(".tab").forEach((tab) => {
 });
 
 document.querySelectorAll('input[type="range"]').forEach((el) => el.addEventListener("input", updateControlOutputs));
+$("start").addEventListener("click", startRun);
 $("run").addEventListener("click", () => {
   if (sim && sim.running) stopRun();
   else startRun();
+});
+$("editSettings").addEventListener("click", () => {
+  stopRun();
+  showView("settings");
 });
 $("randomizeRates").addEventListener("click", randomizeRates);
 
