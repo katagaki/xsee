@@ -150,7 +150,6 @@ function startRun() {
     postFlags: readCount("postFlags"),
     durationSec,
     engagement: readEngagementRates(),
-    text: $("postTextInput").value.trim(),
     content: {
       photos: Number($("photos").value),
       video: $("hasVideo").checked,
@@ -360,12 +359,10 @@ function mediaTile(className, iconPath, label, filled) {
   return tile;
 }
 
-// Text and media are fixed for a run; rebuilt on start and language switch.
+// Media is fixed for a run; rebuilt on start and language switch.
 function renderPostBody() {
   if (!sim) return;
   const c = sim.config.content;
-  $("postText").textContent = sim.config.text;
-  $("postText").hidden = !sim.config.text;
   $("postLimited").hidden = sim.config.accountFlags + sim.config.postFlags === 0;
 
   const media = $("postMedia");
@@ -593,10 +590,6 @@ function applyLanguage() {
     el.textContent = t(el.dataset.i18n);
   });
   $("langPicker").value = lang;
-  const textInput = $("postTextInput");
-  if (!textInput.value || textInput.value === textInput.dataset.sample) textInput.value = t("post.sample");
-  textInput.dataset.sample = t("post.sample");
-  textInput.placeholder = t("post.placeholder");
   renderWeights();
   renderPostBody();
   renderPost();

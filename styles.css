@@ -180,23 +180,6 @@ main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 128px; }
 .field-note { font-size: 11px; color: var(--text-secondary); margin: -8px 0 16px; }
 .field-note--top { margin: -4px 0 12px; }
 
-textarea {
-  -webkit-user-select: text;
-  user-select: text;
-  display: block;
-  width: 100%;
-  padding: 10px 12px;
-  font: inherit;
-  color: var(--text);
-  background: var(--field);
-  border: none;
-  border-bottom: 1px solid var(--border-strong);
-  border-radius: 0;
-  resize: vertical;
-}
-textarea::placeholder { color: var(--text-placeholder); }
-textarea:focus { outline: 2px solid var(--focus); outline-offset: -2px; }
-
 input[type="number"] {
   -webkit-user-select: text;
   user-select: text;
@@ -361,12 +344,6 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--focus); outline-
 .xpost-name { font-weight: 700; color: var(--text); }
 .xpost-handle, .xpost-time { color: var(--text-secondary); }
 .xpost-time::before { content: "· "; }
-.xpost-text {
-  font-size: 15px;
-  line-height: 1.45;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
 .xpost-media { display: flex; flex-direction: column; gap: 8px; }
 .xpost-photos {
   display: grid;
