@@ -15,7 +15,7 @@ const t = (key) => (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.en[key] || k
  * Scoring weights, sourced from the public feed ranking configuration
  * (home-mixer/params/param.rs). Upstream weights multiply the predicted
  * probability of each action, not raw engagement counts, so scorePost
- * divides observed counts by impressions before weighting.
+ * weights a per-impression rate estimate (see PRIOR_IMPRESSIONS).
  * ------------------------------------------------------------------ */
 let WORDS = [];
 let WEIGHTS = { positive: [], negative: [], modifiers: [], inactive: [] };
@@ -92,7 +92,8 @@ function generatePost(config) {
   for (const [key, rate] of Object.entries(config.engagement)) {
     p[key] = available[key] === false ? 0 : rate * (0.6 + rand() * 0.8);
   }
-  p.notDwelled = 0.2 + rand() * 0.6;
+  // Fast scroll-pasts among impressions that did not dwell.
+  p.notDwelled = (1 - p.dwell) * (0.1 + rand() * 0.3);
 
   // Per-post multiplier on the configured negative rates.
   const jitter = () => 0.2 + rand() * 1.6;
@@ -105,20 +106,27 @@ function generatePost(config) {
   counts.bookmark = 0;
 
   return {
-    p, negFactor, mutualShare,
+    p, pNeg: {}, negFactor, mutualShare,
     impressions: 0, verifiedViews: 0, verifiedViewCarry: 0, fracImp: 0, counts,
     contrib: {}, score: 0,
     milestoneIdx: 0, suppressed: false,
   };
 }
 
+// Real engagement rates are a fraction of a percent, so raw counts over a
+// few dozen impressions are mostly noise. Each rate starts at the post's
+// expected probability (standing in for the model prediction) worth this
+// many impressions, and moves toward the observed rate as views accrue.
+const PRIOR_IMPRESSIONS = 500;
+
 function scorePost(post) {
   let score = 0;
-  const denom = Math.max(1, post.impressions);
+  const denom = post.impressions + PRIOR_IMPRESSIONS;
   for (const key of ALL_ACTION_KEYS) {
     let weight = W[key];
     if (key === "reply") weight += W.bidiReplyBoost * post.mutualShare;
-    const c = weight * (post.counts[key] / denom);
+    const expected = post.p[key] ?? post.pNeg[key] ?? 0;
+    const c = weight * ((post.counts[key] + expected * PRIOR_IMPRESSIONS) / denom);
     post.contrib[key] = c;
     score += c;
   }
@@ -130,6 +138,10 @@ function scorePost(post) {
  * ------------------------------------------------------------------ */
 const SPEEDS = [1, 2, 5, 10, 20, 30, 60];
 const currentSpeed = () => SPEEDS[Number($("speed").value)] || 5;
+// Upstream scores only rank candidates against each other, so this
+// illustrative reach model scales against a typical text post's score
+// under the default engagement rates (about 0.01).
+const REACH_SCORE_REF = 0.015;
 const RENDER_MS = 400;   // real ms between panel re-renders
 const MAX_STEPS = 300;   // cap sim steps per frame so slow frames never freeze the page
 
@@ -254,7 +266,7 @@ function stepSim(rates) {
   const decay = Math.exp(-age / (3 * 3600));
   const followerPerMin = sim.baseReachPerMin * decay * (post.score < 0 ? 0.1 : 1);
   const canRecommend = sim.config.accountFlags === 0 && sim.config.postFlags === 0 && post.score > 0;
-  const nonFollowerPerMin = canRecommend ? sim.baseReachPerMin * decay * Math.min(10, post.score * 4) * W.oonFactor : 0;
+  const nonFollowerPerMin = canRecommend ? sim.baseReachPerMin * decay * Math.min(10, post.score / REACH_SCORE_REF) * W.oonFactor : 0;
   const perMin = followerPerMin + nonFollowerPerMin;
   const withCarry = perMin / 60 + post.fracImp;
   const n = Math.floor(withCarry);
@@ -276,7 +288,8 @@ function stepSim(rates) {
     post.counts.bookmark += poisson(sim.rand, post.p.bookmark * n);
     post.counts.notDwelled += poisson(sim.rand, post.p.notDwelled * n);
     for (const [key, rateKey] of Object.entries(NEG_RATE_KEYS)) {
-      const hits = poisson(sim.rand, rates[rateKey] * post.negFactor[key] * n);
+      post.pNeg[key] = rates[rateKey] * post.negFactor[key];
+      const hits = poisson(sim.rand, post.pNeg[key] * n);
       post.counts[key] += hits;
       if (hits > 0) {
         logEvent({ kind: "action", handle: makeActor(sim.rand), action: key, count: hits, negative: true });
@@ -418,7 +431,7 @@ function renderPost() {
 
   const scoreVal = $("postScore");
   scoreVal.className = "post-score-value" + (post.score < 0 ? " post-score-value--neg" : "");
-  scoreVal.textContent = fmt(post.score);
+  scoreVal.textContent = fmt(post.score, 4);
   $("postScoreLabel").textContent = post.score < 0 ? t("post.suppressed") : t("post.score");
 
   let pos = 0, neg = 0;
@@ -428,7 +441,7 @@ function renderPost() {
   $("barNeg").style.width = (neg / total * 100).toFixed(1) + "%";
 
   const top = Object.entries(post.contrib)
-    .filter(([key, c]) => Math.abs(c) > 0.0005 && post.counts[key] > 0)
+    .filter(([key, c]) => Math.abs(c) > 0.00001 && post.counts[key] > 0)
     .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
     .slice(0, 8);
   const actions = $("postActions");
@@ -436,7 +449,7 @@ function renderPost() {
   for (const [key, c] of top) {
     const chip = document.createElement("span");
     if (c < 0) chip.className = "neg";
-    chip.textContent = actionLabel(key) + " " + fmtCompact(post.counts[key]) + " (" + (c >= 0 ? "+" : "−") + fmt(Math.abs(c)) + ")";
+    chip.textContent = actionLabel(key) + " " + fmtCompact(post.counts[key]) + " (" + (c >= 0 ? "+" : "−") + fmt(Math.abs(c), 4) + ")";
     actions.append(chip);
   }
 
@@ -465,7 +478,7 @@ function renderPost() {
   $("statVerifiedViews").textContent = fmtCompact(post.verifiedViews);
   $("statEngagements").textContent = fmtCompact(engagements);
   $("statFollowers").textContent = fmtCompact(post.counts.followAuthor);
-  $("statScore").textContent = fmt(post.score);
+  $("statScore").textContent = fmt(post.score, 4);
 }
 
 function buildTimelineItem(ev) {
@@ -668,7 +681,7 @@ function randomizeEngagement() {
 function updateControlOutputs() {
   for (const { key } of ENGAGEMENT_RATES) {
     const v = Number($("eng-" + key).value);
-    $("eng-" + key + "-value").textContent = (v * 100).toFixed(v >= 0.1 ? 1 : 2) + "%";
+    $("eng-" + key + "-value").textContent = (v * 100).toFixed(v >= 0.1 ? 1 : v >= 0.001 ? 2 : 3) + "%";
   }
   for (const id of RATE_IDS) {
     const v = Number($("rate" + id).value) * RATE_SCALE;
