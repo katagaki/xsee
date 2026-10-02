@@ -38,6 +38,26 @@
     "vireo", "walnut", "wasp", "wave", "wheat", "willow", "winter", "wisteria",
     "wolf", "wren", "yarrow", "yew", "yucca", "zephyr", "zinnia", "zircon"
   ],
+  "engagementRates": [
+    { "key": "favorite", "max": 0.2, "default": 0.035 },
+    { "key": "reply", "max": 0.04, "default": 0.007 },
+    { "key": "retweet", "max": 0.06, "default": 0.01 },
+    { "key": "quote", "max": 0.015, "default": 0.0025 },
+    { "key": "bookmark", "max": 0.03, "default": 0.005 },
+    { "key": "share", "max": 0.012, "default": 0.002 },
+    { "key": "shareDm", "max": 0.006, "default": 0.001 },
+    { "key": "shareCopyLink", "max": 0.004, "default": 0.0007 },
+    { "key": "followAuthor", "max": 0.006, "default": 0.001 },
+    { "key": "click", "max": 0.25, "default": 0.045 },
+    { "key": "profileClick", "max": 0.03, "default": 0.005 },
+    { "key": "openLink", "max": 0.1, "default": 0.018 },
+    { "key": "photoExpand", "max": 0.16, "default": 0.03 },
+    { "key": "videoOpen", "max": 0.12, "default": 0.02 },
+    { "key": "vqv", "max": 0.15, "default": 0.027 },
+    { "key": "quotedClick", "max": 0.02, "default": 0.0035 },
+    { "key": "quotedVqv", "max": 0.03, "default": 0.005 },
+    { "key": "dwell", "max": 0.5, "default": 0.25 }
+  ],
   "weights": {
     "positive": [
       { "key": "favorite",      "value": 0.5 },

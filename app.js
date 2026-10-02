@@ -23,10 +23,12 @@ const W = {};
 let POSITIVE_KEYS = [];
 const NEG_RATE_KEYS = { report: "report", blockAuthor: "block", muteAuthor: "mute", notInterested: "notInterested" };
 let ALL_ACTION_KEYS = [];
+let ENGAGEMENT_RATES = [];
 
 function setStaticData(data) {
   WORDS = data.usernameWords;
   WEIGHTS = data.weights;
+  ENGAGEMENT_RATES = data.engagementRates;
   for (const group of [WEIGHTS.positive, WEIGHTS.negative, WEIGHTS.modifiers]) {
     for (const w of group) W[w.key] = w.value;
   }
@@ -74,31 +76,23 @@ function generatePost(config) {
 
   // Share of your audience that follows you back; boosts the reply weight.
   const mutualShare = Math.min(0.6, Math.min(config.followers, config.following) / Math.max(1, config.followers));
-  // Bigger audiences engage slightly less per-impression.
-  const audienceDamp = 1 / (1 + Math.log10(1 + config.followers) / 8);
-  // Unknowable quality of this particular post.
-  const quality = (0.3 + rand() * 0.7) * audienceDamp;
+  // Unknowable quality of this particular post; only skews negative feedback.
+  const quality = 0.3 + rand() * 0.7;
 
-  // Predicted per-impression probability of each engagement action.
+  // Per-impression probability of each engagement action: the configured
+  // rate with per-post jitter, zeroed for media the post does not have.
+  const available = {
+    openLink: content.link,
+    photoExpand: content.photos > 0,
+    videoOpen: content.video,
+    vqv: content.video,
+    quotedVqv: content.video,
+  };
   const p = {};
-  p.favorite      = rand() * 0.20 * quality;
-  p.reply         = rand() * 0.04 * quality;
-  p.retweet       = rand() * 0.06 * quality;
-  p.quote         = rand() * 0.015 * quality;
-  p.share         = rand() * 0.012 * quality;
-  p.shareDm       = rand() * 0.006 * quality;
-  p.shareCopyLink = rand() * 0.004 * quality;
-  p.followAuthor  = rand() * 0.006 * quality;
-  p.click         = rand() * 0.25 * quality;
-  p.openLink      = content.link ? rand() * 0.10 * quality : 0;
-  p.photoExpand   = content.photos > 0 ? rand() * 0.04 * content.photos * quality : 0;
-  p.videoOpen     = content.video ? rand() * 0.12 * quality : 0;
-  p.vqv           = content.video ? rand() * 0.15 * quality : 0;
-  p.quotedClick   = rand() * 0.02 * quality;
-  p.quotedVqv     = content.video ? rand() * 0.03 * quality : 0;
-  p.profileClick  = rand() * 0.03 * quality;
-  p.dwell         = rand() * 0.5;
-  p.notDwelled    = 0.2 + rand() * 0.6;
+  for (const [key, rate] of Object.entries(config.engagement)) {
+    p[key] = available[key] === false ? 0 : rate * (0.6 + rand() * 0.8);
+  }
+  p.notDwelled = 0.2 + rand() * 0.6;
 
   // Per-post multiplier on the configured negative rates.
   const jitter = () => 0.2 + rand() * 1.6;
@@ -108,6 +102,7 @@ function generatePost(config) {
 
   const counts = {};
   for (const key of ALL_ACTION_KEYS) counts[key] = 0;
+  counts.bookmark = 0;
 
   return {
     p, negFactor, mutualShare,
@@ -154,6 +149,8 @@ function startRun() {
     accountFlags: readCount("accountFlags"),
     postFlags: readCount("postFlags"),
     durationSec,
+    engagement: readEngagementRates(),
+    text: $("postTextInput").value.trim(),
     content: {
       photos: Number($("photos").value),
       video: $("hasVideo").checked,
@@ -180,6 +177,7 @@ function startRun() {
   logEvent({ kind: "posted" });
   $("timeline").textContent = "";
   $("sparkPath").setAttribute("points", "");
+  renderPostBody();
   showView("sim");
   setRunButton(true);
   updateClock();
@@ -275,6 +273,7 @@ function stepSim(rates) {
         logEvent({ kind: "action", handle: makeActor(sim.rand), action: key, count: hits });
       }
     }
+    post.counts.bookmark += poisson(sim.rand, post.p.bookmark * n);
     post.counts.notDwelled += poisson(sim.rand, post.p.notDwelled * n);
     for (const [key, rateKey] of Object.entries(NEG_RATE_KEYS)) {
       const hits = poisson(sim.rand, rates[rateKey] * post.negFactor[key] * n);
@@ -336,24 +335,87 @@ const fmtCompact = (n) => n < 1000 ? String(n) : n < 1e6 ? (n / 1e3).toFixed(1) 
 
 const actionLabel = (key) => t("action." + key);
 
-function contentLabel() {
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function icon(d, filled) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(SVG_NS, "path");
+  path.setAttribute("d", d);
+  if (filled) path.setAttribute("class", "filled");
+  svg.append(path);
+  return svg;
+}
+
+function mediaTile(className, iconPath, label, filled) {
+  const tile = document.createElement("div");
+  tile.className = "xpost-tile " + className;
+  tile.append(icon(iconPath, filled));
+  if (label) {
+    const span = document.createElement("span");
+    span.textContent = label;
+    tile.append(span);
+  }
+  return tile;
+}
+
+// Text and media are fixed for a run; rebuilt on start and language switch.
+function renderPostBody() {
+  if (!sim) return;
   const c = sim.config.content;
-  const parts = [];
-  if (c.photos > 0) parts.push(t("media.photo") + (c.photos > 1 ? " ×" + c.photos : ""));
-  if (c.video) parts.push(t("media.video"));
-  if (c.link) parts.push(t("media.link"));
-  return parts.length ? parts.join(" · ") : t("media.text");
+  $("postText").textContent = sim.config.text;
+  $("postText").hidden = !sim.config.text;
+  $("postLimited").hidden = sim.config.accountFlags + sim.config.postFlags === 0;
+
+  const media = $("postMedia");
+  media.textContent = "";
+  if (c.photos > 0) {
+    const grid = document.createElement("div");
+    grid.className = "xpost-photos xpost-photos--" + c.photos;
+    for (let i = 0; i < c.photos; i++) {
+      grid.append(mediaTile("xpost-tile--photo", "M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6", null));
+    }
+    media.append(grid);
+  }
+  if (c.video) media.append(mediaTile("xpost-tile--video", "M9 6l9 6-9 6z", t("media.video"), true));
+  if (c.link) {
+    const card = document.createElement("div");
+    card.className = "xpost-link";
+    const domain = document.createElement("span");
+    domain.className = "xpost-link-domain";
+    domain.textContent = t("post.linkDomain");
+    const title = document.createElement("span");
+    title.textContent = t("media.link");
+    card.append(domain, title);
+    media.append(card);
+  }
+  media.hidden = !media.childElementCount;
+}
+
+function fmtAge(sec) {
+  if (sec < 60) return Math.floor(sec) + t("time.s");
+  if (sec < 3600) return Math.floor(sec / 60) + t("time.m");
+  return Math.floor(sec / 3600) + t("time.h");
+}
+
+function setCount(id, n) {
+  $(id).querySelector(".xpost-count").textContent = n > 0 ? fmtCompact(n) : "";
 }
 
 function renderPost() {
   if (!sim) return;
   const post = sim.post;
 
-  $("postMeta").textContent = [
-    contentLabel(),
-    fmtCompact(post.impressions) + " " + t("meta.views"),
-    sim.config.accountFlags + sim.config.postFlags > 0 ? t("post.limited") : null,
-  ].filter(Boolean).join(" · ");
+  // Reposts include quotes and shares sum every channel, as X displays them.
+  const n = post.counts;
+  $("postTime").textContent = fmtAge(sim.elapsed);
+  setCount("act-reply", n.reply);
+  setCount("act-repost", n.retweet + n.quote);
+  setCount("act-favorite", n.favorite);
+  setCount("act-views", post.impressions);
+  setCount("act-bookmark", n.bookmark);
+  setCount("act-share", n.share + n.shareDm + n.shareCopyLink);
 
   const scoreVal = $("postScore");
   scoreVal.className = "post-score-value" + (post.score < 0 ? " post-score-value--neg" : "");
@@ -399,6 +461,7 @@ function renderPost() {
   // Stats: views, engagements, new followers, score.
   let engagements = 0;
   for (const key of POSITIVE_KEYS) if (key !== "dwell") engagements += post.counts[key];
+  engagements += post.counts.bookmark;
   $("statViews").textContent = fmtCompact(post.impressions);
   $("statVerifiedViews").textContent = fmtCompact(post.verifiedViews);
   $("statEngagements").textContent = fmtCompact(engagements);
@@ -530,7 +593,12 @@ function applyLanguage() {
     el.textContent = t(el.dataset.i18n);
   });
   $("langPicker").value = lang;
+  const textInput = $("postTextInput");
+  if (!textInput.value || textInput.value === textInput.dataset.sample) textInput.value = t("post.sample");
+  textInput.dataset.sample = t("post.sample");
+  textInput.placeholder = t("post.placeholder");
   renderWeights();
+  renderPostBody();
   renderPost();
   rebuildTimeline();
 }
@@ -563,7 +631,50 @@ function readRates() {
   return rates;
 }
 
+function buildEngagementControls() {
+  const root = $("engagementRates");
+  root.textContent = "";
+  for (const { key, max, default: value } of ENGAGEMENT_RATES) {
+    const field = document.createElement("div");
+    field.className = "field";
+    const label = document.createElement("label");
+    label.htmlFor = "eng-" + key;
+    const name = document.createElement("span");
+    name.dataset.i18n = "action." + key;
+    const out = document.createElement("output");
+    out.id = "eng-" + key + "-value";
+    label.append(name, " ", out);
+    const input = document.createElement("input");
+    input.type = "range";
+    input.id = "eng-" + key;
+    input.min = "0";
+    input.max = String(max);
+    input.step = String(max / 100);
+    input.value = String(value);
+    input.addEventListener("input", updateControlOutputs);
+    field.append(label, input);
+    root.append(field);
+  }
+}
+
+function readEngagementRates() {
+  const rates = {};
+  for (const { key } of ENGAGEMENT_RATES) rates[key] = Number($("eng-" + key).value);
+  return rates;
+}
+
+function randomizeEngagement() {
+  for (const { key, max } of ENGAGEMENT_RATES) {
+    $("eng-" + key).value = String(Math.random() * max);
+  }
+  updateControlOutputs();
+}
+
 function updateControlOutputs() {
+  for (const { key } of ENGAGEMENT_RATES) {
+    const v = Number($("eng-" + key).value);
+    $("eng-" + key + "-value").textContent = (v * 100).toFixed(v >= 0.1 ? 1 : 2) + "%";
+  }
   for (const id of RATE_IDS) {
     const v = Number($("rate" + id).value) * RATE_SCALE;
     $("rate" + id + "Value").textContent = (v * 100).toFixed(3) + "%";
@@ -608,12 +719,14 @@ $("editSettings").addEventListener("click", () => {
   showView("settings");
 });
 $("randomizeRates").addEventListener("click", randomizeRates);
+$("randomizeEngagement").addEventListener("click", randomizeEngagement);
 
 Promise.all([
   fetch("data.json").then((r) => r.json()),
   fetch("strings.json").then((r) => r.json()),
 ]).then(([data, strings]) => {
   setStaticData(data);
+  buildEngagementControls();
   STRINGS = strings;
   applyLanguage();
   updateControlOutputs();

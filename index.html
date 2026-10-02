@@ -52,6 +52,10 @@
           <div class="settings-group">
             <h2 class="section-title" data-i18n="section.post">Post content</h2>
             <div class="field">
+              <label for="postTextInput" data-i18n="field.postText">Post text</label>
+              <textarea id="postTextInput" rows="4" maxlength="280"></textarea>
+            </div>
+            <div class="field">
               <label for="photos"><span data-i18n="field.photos">Photos</span> <output id="photosValue">0</output></label>
               <input type="range" id="photos" min="0" max="4" step="1" value="0">
             </div>
@@ -96,30 +100,22 @@
               <label for="duration"><span data-i18n="field.duration">Duration</span> <output id="durationValue">2:00</output></label>
               <input type="range" id="duration" min="30" max="1440" step="30" value="120">
             </div>
+            <h2 class="section-title" data-i18n="section.engagement">Engagement rates</h2>
+            <p class="field-note field-note--top" data-i18n="note.engagement">Per impression.</p>
+            <div id="engagementRates"></div>
+            <button id="randomizeEngagement" class="btn btn--secondary btn--block" data-i18n="button.randomizeEngagement">Randomize engagement</button>
           </div>
         </div>
 
-        <div class="settings-actions">
-          <button id="start" class="btn btn--primary" data-i18n="button.run">Start simulation</button>
+        <div class="dock">
+          <div class="dock-inner settings-actions">
+            <button id="start" class="btn btn--primary" data-i18n="button.run">Start simulation</button>
+          </div>
         </div>
       </div>
 
       <!-- ============ SIMULATION VIEW ============ -->
       <div class="results" id="simView" hidden>
-        <div class="sim-bar">
-          <div class="clock">
-            <span class="clock-time" id="clockTime">0:00:00</span>
-            <div class="clock-bar"><div class="clock-fill" id="clockFill"></div></div>
-          </div>
-          <div class="field sim-speed">
-            <label for="speed"><span data-i18n="field.speed">Speed</span> <output id="speedValue">5×</output></label>
-            <input type="range" id="speed" min="0" max="6" step="1" value="2">
-          </div>
-          <div class="sim-actions">
-            <button id="editSettings" class="btn btn--secondary" data-i18n="button.settings">Edit settings</button>
-            <button id="run" class="btn btn--danger" data-i18n="button.stop">Stop simulation</button>
-          </div>
-        </div>
         <div class="stats" id="stats">
           <div class="stat"><span class="stat-label" data-i18n="stat.views">Views</span><span class="stat-value" id="statViews">-</span></div>
           <div class="stat"><span class="stat-label" data-i18n="stat.verifiedViews">Verified follower views</span><span class="stat-value" id="statVerifiedViews">-</span></div>
@@ -128,29 +124,61 @@
           <div class="stat"><span class="stat-label" data-i18n="stat.score">Score</span><span class="stat-value" id="statScore">-</span></div>
         </div>
         <div class="results-grid">
-          <article class="post-card" id="postCard">
-            <div class="post-head">
-              <span class="post-author" data-i18n="post.you">Your post</span>
-              <span class="post-meta" id="postMeta"></span>
-            </div>
-            <div class="post-score-row">
-              <span id="postScore" class="post-score-value">0.00</span>
-              <span id="postScoreLabel" class="post-score-label"></span>
-            </div>
-            <svg id="sparkline" viewBox="0 0 300 60" preserveAspectRatio="none" aria-hidden="true">
-              <line id="sparkZero" x1="0" x2="300" y1="58" y2="58"></line>
-              <polyline id="sparkPath" points=""></polyline>
-            </svg>
-            <div class="bar">
-              <span id="barPos" class="bar-seg bar-seg--pos"></span>
-              <span id="barNeg" class="bar-seg bar-seg--neg"></span>
-            </div>
-            <div id="postActions" class="post-actions"></div>
-          </article>
+          <div class="post-column">
+            <article class="xpost" id="postCard">
+              <div class="xpost-head">
+                <span class="xpost-name" data-i18n="post.name">You</span>
+                <span class="xpost-handle" data-i18n="post.handle">@you</span>
+                <span class="xpost-time" id="postTime"></span>
+              </div>
+              <p class="xpost-text" id="postText"></p>
+              <div class="xpost-media" id="postMedia"></div>
+              <p class="xpost-limited" id="postLimited" data-i18n="post.limited" hidden>non-follower reach limited</p>
+              <div class="xpost-actions">
+              <span class="xpost-action" id="act-reply"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H10l-6 4z"></path></svg><span class="xpost-count">0</span></span>
+              <span class="xpost-action" id="act-repost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3L3 7l4 4M3 7h13a3 3 0 0 1 3 3v2M17 21l4-4-4-4M21 17H8a3 3 0 0 1-3-3v-2"></path></svg><span class="xpost-count">0</span></span>
+              <span class="xpost-action" id="act-favorite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-8-4.6-8-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 8 2.4C20 15.4 12 20 12 20z"></path></svg><span class="xpost-count">0</span></span>
+              <span class="xpost-action" id="act-views"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-7M10 20V4M15 20V9M20 20v-5"></path></svg><span class="xpost-count">0</span></span>
+              <span class="xpost-action" id="act-bookmark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"></path></svg><span class="xpost-count">0</span></span>
+              <span class="xpost-action" id="act-share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M4 14v7h16v-7"></path></svg><span class="xpost-count">0</span></span>
+              </div>
+            </article>
+            <section class="post-card">
+              <div class="post-score-row">
+                <span id="postScore" class="post-score-value">0.00</span>
+                <span id="postScoreLabel" class="post-score-label"></span>
+              </div>
+              <svg id="sparkline" viewBox="0 0 300 60" preserveAspectRatio="none" aria-hidden="true">
+                <line id="sparkZero" x1="0" x2="300" y1="58" y2="58"></line>
+                <polyline id="sparkPath" points=""></polyline>
+              </svg>
+              <div class="bar">
+                <span id="barPos" class="bar-seg bar-seg--pos"></span>
+                <span id="barNeg" class="bar-seg bar-seg--neg"></span>
+              </div>
+              <div id="postActions" class="post-actions"></div>
+            </section>
+          </div>
           <aside class="timeline">
             <h2 class="section-title" data-i18n="section.timeline">Timeline</h2>
             <ol id="timeline" class="timeline-list"></ol>
           </aside>
+        </div>
+        <div class="dock">
+          <div class="dock-inner sim-bar">
+            <div class="clock">
+              <span class="clock-time" id="clockTime">0:00:00</span>
+              <div class="clock-bar"><div class="clock-fill" id="clockFill"></div></div>
+            </div>
+            <div class="field sim-speed">
+              <label for="speed"><span data-i18n="field.speed">Speed</span> <output id="speedValue">5×</output></label>
+              <input type="range" id="speed" min="0" max="6" step="1" value="2">
+            </div>
+            <div class="sim-actions">
+              <button id="editSettings" class="btn btn--secondary" data-i18n="button.settings">Edit settings</button>
+              <button id="run" class="btn btn--danger" data-i18n="button.stop">Stop simulation</button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
