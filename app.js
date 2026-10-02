@@ -158,6 +158,7 @@ function startRun() {
   };
   sim = {
     config,
+    quoteIndex: (Math.random() * t("post.quotes").length) | 0,
     post: generatePost(config),
     rand: mulberry32(config.seed ^ 0x9e3779b9),
     elapsed: 0,
@@ -363,6 +364,7 @@ function mediaTile(className, iconPath, label, filled) {
 function renderPostBody() {
   if (!sim) return;
   const c = sim.config.content;
+  $("postText").textContent = t("post.quotes")[sim.quoteIndex];
   $("postLimited").hidden = sim.config.accountFlags + sim.config.postFlags === 0;
 
   const media = $("postMedia");

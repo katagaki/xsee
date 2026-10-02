@@ -100,7 +100,28 @@
     "time.m": "m",
     "time.h": "h",
     "post.linkDomain": "example.com",
-    "post.sample": "Strange things are afoot at the Circle K."
+    "post.quotes": [
+      "Strange things are afoot at the Circle K.",
+      "I'm not even supposed to be here today.",
+      "That rug really tied the room together.",
+      "These go to eleven.",
+      "You're killing me, Smalls.",
+      "Sometimes you eat the bar, and sometimes, well, he eats you.",
+      "Gentlemen, you can't fight in here! This is the War Room!",
+      "Is it safe?",
+      "We're on a mission from God.",
+      "Be excellent to each other.",
+      "Shall we play a game?",
+      "'Tis but a scratch.",
+      "Life moves pretty fast.",
+      "Well, nobody's perfect.",
+      "Don't cross the streams.",
+      "So I got that going for me, which is nice.",
+      "I'm kind of a big deal.",
+      "Fat, drunk, and stupid is no way to go through life, son.",
+      "I'm walking here!",
+      "Inconceivable!"
+    ]
   },
   "ja": {
     "tab.simulator": "シミュレーター",
@@ -203,6 +224,27 @@
     "time.m": "分",
     "time.h": "時間",
     "post.linkDomain": "example.com",
-    "post.sample": "サークルKで妙なことが起きてるぞ。"
+    "post.quotes": [
+      "サークルKで妙なことが起きてるぞ。",
+      "今日は本当は休みのはずだったんだ。",
+      "あのラグが部屋をまとめてたんだ。",
+      "これは11まであるんだ。",
+      "勘弁してくれよ、スモールズ。",
+      "熊を食う日もあれば、熊に食われる日もある。",
+      "諸君、ここで喧嘩はやめたまえ！ここは作戦室だぞ！",
+      "安全か？",
+      "俺たちは神の使命を帯びてるんだ。",
+      "お互いに最高であれ。",
+      "ゲームをしようか？",
+      "ただのかすり傷だ。",
+      "人生はあっという間に過ぎていく。",
+      "まあ、完璧な人間はいないさ。",
+      "ビームを交差させるな。",
+      "まあ、それだけは救いだな。",
+      "俺、ちょっとした大物なんだ。",
+      "太って酔って愚かなままじゃ、人生はやっていけないぞ。",
+      "こっちは歩いてるんだぞ！",
+      "ありえない！"
+    ]
   }
 }
