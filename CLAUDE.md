@@ -14,7 +14,8 @@ A static, single-page simulator of the X "For You" feed ranking algorithm. Weigh
 The UI mirrors X's own web client.
 
 - System font stack: `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`. Bold names and section titles (700/800), 15px body, 13px secondary text.
-- Layout: 600px center column with side borders and a sticky blurred header holding the title and X-style tabs (equal width, bold active label, rounded blue underline). A 350px right sidebar holds the timeline during a run and drops below the column at 1000px. No navigation rail.
+- Layout: 600px center column with side borders and a sticky blurred header, plus a 350px sticky right sidebar of rounded cards: the timeline (during a run) above the weights. No navigation rail.
+- Below 1000px the sidebar collapses and the header shows X-style tabs (equal width, bold active label, rounded blue underline) switching between the simulator and the weights; the timeline sits under the post. Tab state lives in `data-tab` on `.app` and CSS does the hiding.
 - All colors are CSS custom properties on `:root`, with a dark ("Lights out", pure black) override under `@media (prefers-color-scheme: dark)`. Light and dark must both work; never hardcode a themed color in a component rule.
 - Accent blue `#1d9bf0`, error red `#f4212e`, like pink `#f91880`, repost green `#00ba7c`.
 - Buttons are pills: primary is inverted (black in light, white in dark), secondary is outlined, danger is red.

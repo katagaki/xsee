@@ -7,19 +7,19 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="app">
-    <main class="column">
-      <header class="column-header">
-        <div class="column-header-top">
-          <span class="brand">X Simulator</span>
-          <a class="header-link" href="https://x.com/i/jf/under_the_hood" target="_blank" rel="noopener">Under the Hood</a>
-        </div>
-        <nav class="tabs" role="tablist">
-          <button class="tab tab--active" role="tab" aria-selected="true" data-tab="simulator"><span data-i18n="tab.simulator">Simulator</span></button>
-          <button class="tab" role="tab" aria-selected="false" data-tab="weights"><span data-i18n="tab.weights">Weights</span></button>
-        </nav>
-      </header>
+  <div class="app" id="app" data-tab="simulator">
+    <header class="column-header">
+      <div class="column-header-top">
+        <span class="brand">X Simulator</span>
+        <a class="header-link" href="https://x.com/i/jf/under_the_hood" target="_blank" rel="noopener">Under the Hood</a>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button class="tab tab--active" role="tab" aria-selected="true" data-tab="simulator"><span data-i18n="tab.simulator">Simulator</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="weights"><span data-i18n="tab.weights">Weights</span></button>
+      </nav>
+    </header>
 
+    <main class="column">
       <!-- ============ SIMULATOR ============ -->
       <section id="panel-simulator" class="panel" role="tabpanel">
         <!-- ============ SETTINGS VIEW ============ -->
@@ -173,17 +173,16 @@
           </div>
         </div>
       </section>
-
-      <!-- ============ WEIGHTS ============ -->
-      <section id="panel-weights" class="panel" role="tabpanel" hidden>
-        <div class="weights-layout" id="weightsRoot"></div>
-      </section>
     </main>
 
-    <aside class="sidebar" id="sidebar" hidden>
-      <section class="timeline">
+    <aside class="sidebar">
+      <section class="card timeline" id="timelineCard" hidden>
         <h2 class="section-title" data-i18n="section.timeline">Timeline</h2>
         <ol id="timeline" class="timeline-list"></ol>
+      </section>
+      <section class="card weights-card" id="panel-weights" role="tabpanel">
+        <h2 class="section-title" data-i18n="tab.weights">Weights</h2>
+        <div id="weightsRoot"></div>
       </section>
     </aside>
   </div>

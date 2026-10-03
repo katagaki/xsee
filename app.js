@@ -318,13 +318,8 @@ function setRunButton(running) {
 function showView(view) {
   $("settingsView").hidden = view !== "settings";
   $("simView").hidden = view !== "sim";
-  updateSidebar();
+  $("timelineCard").hidden = view !== "sim";
   window.scrollTo(0, 0);
-}
-
-// The timeline sidebar belongs to the simulation view only.
-function updateSidebar() {
-  $("sidebar").hidden = $("panel-simulator").hidden || $("simView").hidden;
 }
 
 function fmtHMS(sec) {
@@ -694,10 +689,9 @@ document.querySelectorAll(".tab").forEach((tab) => {
       other.classList.toggle("tab--active", active);
       other.setAttribute("aria-selected", String(active));
     });
-    document.querySelectorAll(".panel").forEach((p) => {
-      p.hidden = p.id !== "panel-" + tab.dataset.tab;
-    });
-    updateSidebar();
+    // Tabs only show below the sidebar breakpoint; CSS hides the inactive side.
+    $("app").dataset.tab = tab.dataset.tab;
+    window.scrollTo(0, 0);
   });
 });
 

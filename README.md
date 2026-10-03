@@ -2,7 +2,7 @@
 
 A static, single-page simulator of the X "For You" feed ranking algorithm.
 
-Set follower, following, and verified follower counts; add account or post visibility flags; tune per-impression engagement rates (defaults follow typical X analytics ranges) and negative feedback rates; then run a simulation to watch estimated engagement and reach. The Weights tab summarizes the published scoring weights.
+Set follower, following, and verified follower counts; add account or post visibility flags; tune per-impression engagement rates (defaults follow typical X analytics ranges) and negative feedback rates; then run a simulation to watch estimated engagement and reach. The sidebar (a Weights tab on narrow screens) summarizes the published scoring weights.
 
 Weights were checked against [xai-org/x-algorithm](https://github.com/xai-org/x-algorithm/blob/bf7db1becb6590152fba79b8c3bf0555752f7b14/home-mixer/params/param.rs) at commit `bf7db1b` (September 25, 2026). That update did not change the published scoring defaults. Engagement probabilities and reach are illustrative estimates, not a reimplementation of Phoenix.
 

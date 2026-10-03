@@ -66,24 +66,27 @@ svg path.filled { fill: currentColor; stroke: none; }
 
 /* ---------- app shell ---------- */
 .app {
-  display: flex;
+  display: grid;
+  grid-template-columns: 600px 350px;
+  grid-template-rows: auto 1fr;
+  grid-template-areas: "header sidebar" "main sidebar";
   justify-content: center;
-  align-items: flex-start;
-  gap: 30px;
+  column-gap: 30px;
   min-height: 100vh;
 }
-.column {
-  flex: none;
-  width: 600px;
-  min-height: 100vh;
+.column-header, .column {
   border-left: 1px solid var(--border-subtle);
   border-right: 1px solid var(--border-subtle);
+}
+.column {
+  grid-area: main;
   display: flex;
   flex-direction: column;
 }
 .panel, .view { flex: 1; display: flex; flex-direction: column; }
 
 .column-header {
+  grid-area: header;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -110,7 +113,7 @@ svg path.filled { fill: currentColor; stroke: none; }
 .header-link:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 /* ---------- tabs ---------- */
-.tabs { display: flex; }
+.tabs { display: none; }
 .tab {
   appearance: none;
   flex: 1;
@@ -144,20 +147,54 @@ svg path.filled { fill: currentColor; stroke: none; }
 .tab:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
 
 .sidebar {
+  grid-area: sidebar;
   position: sticky;
   top: 0;
-  flex: none;
-  width: 350px;
-  padding-top: 12px;
+  align-self: start;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
+.card {
+  flex: none;
+  background: var(--layer-accent);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.card > .section-title { padding: 12px 16px 0; margin-bottom: 4px; }
 
+/* Below the sidebar breakpoint the header tabs switch between the
+   simulator column and the weights card. */
 @media (max-width: 1000px) {
-  .app { flex-direction: column; align-items: center; gap: 0; }
-  .sidebar { position: static; width: 600px; padding: 16px; border-left: 1px solid var(--border-subtle); border-right: 1px solid var(--border-subtle); }
+  .app {
+    grid-template-columns: 600px;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas: "header" "main" "sidebar";
+  }
+  .app[data-tab="weights"] { grid-template-rows: auto 1fr; grid-template-areas: "header" "sidebar"; }
+  .app[data-tab="weights"] .column,
+  .app[data-tab="weights"] .timeline,
+  .app[data-tab="simulator"] .weights-card { display: none; }
+  .tabs { display: flex; }
+  .sidebar {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+    border-left: 1px solid var(--border-subtle);
+    border-right: 1px solid var(--border-subtle);
+  }
+  .timeline { margin: 16px; }
+  .weights-card { background: transparent; border: none; border-radius: 0; }
+  .weights-card > .section-title { display: none; }
 }
 @media (max-width: 600px) {
-  .app { align-items: stretch; }
-  .column, .sidebar { width: auto; border-left: none; border-right: none; }
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .column-header, .column, .sidebar { border-left: none; border-right: none; }
 }
 
 /* ---------- settings ---------- */
@@ -466,16 +503,9 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--focus); outline-
 .post-actions .neg { color: var(--support-error); }
 
 /* ---------- timeline ---------- */
-.timeline {
-  background: var(--layer-accent);
-  border: 1px solid var(--border-subtle);
-  border-radius: 16px;
-  overflow: hidden;
-}
-.timeline .section-title { padding: 12px 16px 0; }
 .timeline-list {
   list-style: none;
-  max-height: calc(100vh - 100px);
+  max-height: 40vh;
   overflow-y: auto;
 }
 @media (max-width: 1000px) { .timeline-list { max-height: 480px; } }
@@ -500,12 +530,13 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--focus); outline-
   overflow-wrap: anywhere;
 }
 
-/* ---------- weights page ---------- */
+/* ---------- weights ---------- */
 .weights-group { border-bottom: 1px solid var(--border-subtle); }
+.weights-group:last-child { border-bottom: none; }
 .weights-group h2 {
-  font-size: 20px;
-  font-weight: 800;
-  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 12px 16px 4px;
 }
 .wtable { width: 100%; border-collapse: collapse; }
 .wtable th {
@@ -518,13 +549,13 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--focus); outline-
 }
 .wtable th:last-child, .wtable td:last-child { text-align: right; }
 .wtable td {
-  padding: 10px 16px;
+  padding: 8px 16px;
   border-top: 1px solid var(--border-subtle);
   font-variant-numeric: tabular-nums;
 }
 .wtable tbody tr:hover { background: var(--hover); }
 .wtable td.num { text-align: right; white-space: nowrap; font-weight: 700; }
-.wbar-cell { width: 45%; }
+.wbar-cell { width: 35%; }
 .wbar { height: 8px; border-radius: 4px; background: var(--field); overflow: hidden; }
 .wbar-fill { height: 100%; border-radius: 4px; }
 .wbar-fill--pos { background: var(--interactive); }
