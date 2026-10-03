@@ -5,10 +5,7 @@
  * ------------------------------------------------------------------ */
 let STRINGS = { en: {}, ja: {} };
 
-let lang = localStorage.getItem("lang");
-if (lang !== "en" && lang !== "ja") {
-  lang = (navigator.language || "en").toLowerCase().startsWith("ja") ? "ja" : "en";
-}
+const lang = (navigator.language || "en").toLowerCase().startsWith("ja") ? "ja" : "en";
 const t = (key) => (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.en[key] || key;
 
 /* ------------------------------------------------------------------ *
@@ -321,7 +318,13 @@ function setRunButton(running) {
 function showView(view) {
   $("settingsView").hidden = view !== "settings";
   $("simView").hidden = view !== "sim";
+  updateSidebar();
   window.scrollTo(0, 0);
+}
+
+// The timeline sidebar belongs to the simulation view only.
+function updateSidebar() {
+  $("sidebar").hidden = $("panel-simulator").hidden || $("simView").hidden;
 }
 
 function fmtHMS(sec) {
@@ -373,7 +376,7 @@ function mediaTile(className, iconPath, label, filled) {
   return tile;
 }
 
-// Media is fixed for a run; rebuilt on start and language switch.
+// Media is fixed for a run; built once on start.
 function renderPostBody() {
   if (!sim) return;
   const c = sim.config.content;
@@ -517,15 +520,6 @@ function renderTimeline() {
   while (list.children.length > EVENT_CAP) list.lastChild.remove();
 }
 
-// Full rebuild without animation, used on language switch.
-function rebuildTimeline() {
-  if (!sim) return;
-  const list = $("timeline");
-  list.textContent = "";
-  const events = sim.events.slice(-EVENT_CAP);
-  for (const ev of events) list.prepend(buildTimelineItem(ev));
-}
-
 /* ------------------------------------------------------------------ *
  * Weights page
  * ------------------------------------------------------------------ */
@@ -597,25 +591,15 @@ function renderWeights() {
 }
 
 /* ------------------------------------------------------------------ *
- * Language switching
+ * Localization of static markup
  * ------------------------------------------------------------------ */
 function applyLanguage() {
   document.documentElement.lang = lang;
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     el.textContent = t(el.dataset.i18n);
   });
-  $("langPicker").value = lang;
   renderWeights();
-  renderPostBody();
-  renderPost();
-  rebuildTimeline();
 }
-
-$("langPicker").addEventListener("change", (e) => {
-  lang = e.target.value;
-  localStorage.setItem("lang", lang);
-  applyLanguage();
-});
 
 /* ------------------------------------------------------------------ *
  * Controls
@@ -713,6 +697,7 @@ document.querySelectorAll(".tab").forEach((tab) => {
     document.querySelectorAll(".panel").forEach((p) => {
       p.hidden = p.id !== "panel-" + tab.dataset.tab;
     });
+    updateSidebar();
   });
 });
 

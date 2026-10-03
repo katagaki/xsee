@@ -8,208 +8,184 @@
 </head>
 <body>
   <div class="app">
-    <header class="rail">
-      <span class="rail-brand">X<span class="rail-label"> Simulator</span></span>
-      <nav class="rail-nav" role="tablist">
-        <button class="tab tab--active" role="tab" aria-selected="true" data-tab="simulator">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5V21h-6v-6H9v6H3z"></path></svg>
-          <span class="rail-label" data-i18n="tab.simulator">Simulator</span>
-        </button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="weights">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>
-          <span class="rail-label" data-i18n="tab.weights">Weights</span>
-        </button>
-        <a class="rail-item" href="https://x.com/i/jf/under_the_hood" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7M21 3l-9 9M18 14v7H3V6h7"></path></svg>
-          <span class="rail-label">Under the Hood</span>
-        </a>
-      </nav>
-      <select class="lang-picker" id="langPicker" aria-label="Language">
-        <option value="en">English</option>
-        <option value="ja">日本語</option>
-      </select>
-    </header>
+    <main class="column">
+      <header class="column-header">
+        <div class="column-header-top">
+          <span class="brand">X Simulator</span>
+          <a class="header-link" href="https://x.com/i/jf/under_the_hood" target="_blank" rel="noopener">Under the Hood</a>
+        </div>
+        <nav class="tabs" role="tablist">
+          <button class="tab tab--active" role="tab" aria-selected="true" data-tab="simulator"><span data-i18n="tab.simulator">Simulator</span></button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="weights"><span data-i18n="tab.weights">Weights</span></button>
+        </nav>
+      </header>
 
-    <main>
       <!-- ============ SIMULATOR ============ -->
       <section id="panel-simulator" class="panel" role="tabpanel">
         <!-- ============ SETTINGS VIEW ============ -->
-        <div class="layout" id="settingsView">
-          <div class="column">
-            <div class="column-header"><h1 data-i18n="tab.simulator">Simulator</h1></div>
-
-            <div class="settings-group">
-              <h2 class="section-title" data-i18n="section.account">Account</h2>
-              <div class="field field--input">
-                <label for="followers" data-i18n="field.followers">Followers</label>
-                <input type="number" id="followers" min="0" max="100000000" value="1250">
-              </div>
-              <div class="field field--input">
-                <label for="following" data-i18n="field.following">Following</label>
-                <input type="number" id="following" min="0" max="100000000" value="480">
-              </div>
-              <div class="field field--input">
-                <label for="verifiedFollowers" data-i18n="field.verifiedFollowers">Verified followers</label>
-                <input type="number" id="verifiedFollowers" min="0" max="100000000" value="120">
-              </div>
-              <p class="field-note" data-i18n="note.verified">Used to estimate verified follower views, not as a ranking boost.</p>
-              <div class="field field--input">
-                <label for="accountFlags" data-i18n="field.accountFlags">Account visibility flags</label>
-                <input type="number" id="accountFlags" min="0" max="1000" value="0">
-              </div>
-              <p class="field-note" data-i18n="note.flags">A flag represents a visibility label that limits recommendations. One or more flags blocks simulated non-follower reach.</p>
+        <div class="view" id="settingsView">
+          <div class="settings-group">
+            <h2 class="section-title" data-i18n="section.account">Account</h2>
+            <div class="field field--input">
+              <label for="followers" data-i18n="field.followers">Followers</label>
+              <input type="number" id="followers" min="0" max="100000000" value="1250">
             </div>
-
-            <div class="settings-group">
-              <h2 class="section-title" data-i18n="section.post">Post content</h2>
-              <div class="field">
-                <label for="photos"><span data-i18n="field.photos">Photos</span> <output id="photosValue">0</output></label>
-                <input type="range" id="photos" min="0" max="4" step="1" value="0">
-              </div>
-              <div class="check">
-                <label for="hasVideo" data-i18n="field.video">Video</label>
-                <input type="checkbox" id="hasVideo">
-              </div>
-              <div class="check">
-                <label for="hasLink" data-i18n="field.link">Link</label>
-                <input type="checkbox" id="hasLink">
-              </div>
-              <div class="field field--input">
-                <label for="postFlags" data-i18n="field.postFlags">Post visibility flags</label>
-                <input type="number" id="postFlags" min="0" max="1000" value="0">
-              </div>
+            <div class="field field--input">
+              <label for="following" data-i18n="field.following">Following</label>
+              <input type="number" id="following" min="0" max="100000000" value="480">
             </div>
-
-            <div class="settings-group">
-              <h2 class="section-title" data-i18n="section.rates">Negative feedback rates</h2>
-              <div class="field">
-                <label for="rateReport"><span data-i18n="action.report">Report</span> <output id="rateReportValue">0.000%</output></label>
-                <input type="range" id="rateReport" min="0" max="100" step="1" value="0">
-              </div>
-              <div class="field">
-                <label for="rateBlock"><span data-i18n="rate.block">Block</span> <output id="rateBlockValue">0.000%</output></label>
-                <input type="range" id="rateBlock" min="0" max="100" step="1" value="0">
-              </div>
-              <div class="field">
-                <label for="rateMute"><span data-i18n="rate.mute">Mute</span> <output id="rateMuteValue">0.000%</output></label>
-                <input type="range" id="rateMute" min="0" max="100" step="1" value="0">
-              </div>
-              <div class="field">
-                <label for="rateNotInterested"><span data-i18n="action.notInterested">Not interested</span> <output id="rateNotInterestedValue">0.000%</output></label>
-                <input type="range" id="rateNotInterested" min="0" max="100" step="1" value="0">
-              </div>
-              <button id="randomizeRates" class="btn btn--secondary btn--block" data-i18n="button.randomize">Randomize rates</button>
+            <div class="field field--input">
+              <label for="verifiedFollowers" data-i18n="field.verifiedFollowers">Verified followers</label>
+              <input type="number" id="verifiedFollowers" min="0" max="100000000" value="120">
             </div>
-
-            <div class="settings-group">
-              <h2 class="section-title" data-i18n="section.sim">Simulation</h2>
-              <div class="field">
-                <label for="duration"><span data-i18n="field.duration">Duration</span> <output id="durationValue">2:00</output></label>
-                <input type="range" id="duration" min="30" max="1440" step="30" value="120">
-              </div>
+            <p class="field-note" data-i18n="note.verified">Used to estimate verified follower views, not as a ranking boost.</p>
+            <div class="field field--input">
+              <label for="accountFlags" data-i18n="field.accountFlags">Account visibility flags</label>
+              <input type="number" id="accountFlags" min="0" max="1000" value="0">
             </div>
+            <p class="field-note" data-i18n="note.flags">A flag represents a visibility label that limits recommendations. One or more flags blocks simulated non-follower reach.</p>
+          </div>
 
-            <div class="settings-group">
-              <h2 class="section-title" data-i18n="section.engagement">Engagement rates</h2>
-              <p class="field-note field-note--top" data-i18n="note.engagement">Per impression.</p>
-              <div id="engagementRates"></div>
-              <button id="randomizeEngagement" class="btn btn--secondary btn--block" data-i18n="button.randomizeEngagement">Randomize engagement</button>
+          <div class="settings-group">
+            <h2 class="section-title" data-i18n="section.post">Post content</h2>
+            <div class="field">
+              <label for="photos"><span data-i18n="field.photos">Photos</span> <output id="photosValue">0</output></label>
+              <input type="range" id="photos" min="0" max="4" step="1" value="0">
             </div>
+            <div class="check">
+              <label for="hasVideo" data-i18n="field.video">Video</label>
+              <input type="checkbox" id="hasVideo">
+            </div>
+            <div class="check">
+              <label for="hasLink" data-i18n="field.link">Link</label>
+              <input type="checkbox" id="hasLink">
+            </div>
+            <div class="field field--input">
+              <label for="postFlags" data-i18n="field.postFlags">Post visibility flags</label>
+              <input type="number" id="postFlags" min="0" max="1000" value="0">
+            </div>
+          </div>
 
-            <div class="dock settings-actions">
-              <button id="start" class="btn btn--primary" data-i18n="button.run">Start simulation</button>
+          <div class="settings-group">
+            <h2 class="section-title" data-i18n="section.rates">Negative feedback rates</h2>
+            <div class="field">
+              <label for="rateReport"><span data-i18n="action.report">Report</span> <output id="rateReportValue">0.000%</output></label>
+              <input type="range" id="rateReport" min="0" max="100" step="1" value="0">
             </div>
+            <div class="field">
+              <label for="rateBlock"><span data-i18n="rate.block">Block</span> <output id="rateBlockValue">0.000%</output></label>
+              <input type="range" id="rateBlock" min="0" max="100" step="1" value="0">
+            </div>
+            <div class="field">
+              <label for="rateMute"><span data-i18n="rate.mute">Mute</span> <output id="rateMuteValue">0.000%</output></label>
+              <input type="range" id="rateMute" min="0" max="100" step="1" value="0">
+            </div>
+            <div class="field">
+              <label for="rateNotInterested"><span data-i18n="action.notInterested">Not interested</span> <output id="rateNotInterestedValue">0.000%</output></label>
+              <input type="range" id="rateNotInterested" min="0" max="100" step="1" value="0">
+            </div>
+            <button id="randomizeRates" class="btn btn--secondary btn--block" data-i18n="button.randomize">Randomize rates</button>
+          </div>
+
+          <div class="settings-group">
+            <h2 class="section-title" data-i18n="section.sim">Simulation</h2>
+            <div class="field">
+              <label for="duration"><span data-i18n="field.duration">Duration</span> <output id="durationValue">2:00</output></label>
+              <input type="range" id="duration" min="30" max="1440" step="30" value="120">
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <h2 class="section-title" data-i18n="section.engagement">Engagement rates</h2>
+            <p class="field-note field-note--top" data-i18n="note.engagement">Per impression.</p>
+            <div id="engagementRates"></div>
+            <button id="randomizeEngagement" class="btn btn--secondary btn--block" data-i18n="button.randomizeEngagement">Randomize engagement</button>
+          </div>
+
+          <div class="dock settings-actions">
+            <button id="start" class="btn btn--primary" data-i18n="button.run">Start simulation</button>
           </div>
         </div>
 
         <!-- ============ SIMULATION VIEW ============ -->
-        <div class="layout" id="simView" hidden>
-          <div class="column">
-            <div class="column-header"><h1 data-i18n="header.post">Post</h1></div>
-
-            <article class="xpost" id="postCard">
-              <div class="xpost-avatar" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path class="filled" d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM3 22a9 9 0 0 1 18 0z"></path></svg>
-              </div>
-              <div class="xpost-body">
-                <div class="xpost-head">
-                  <span class="xpost-name" data-i18n="post.name">You</span>
-                  <span class="xpost-handle" data-i18n="post.handle">@you</span>
-                  <span class="xpost-time" id="postTime"></span>
-                </div>
-                <p class="xpost-text" id="postText"></p>
-                <div class="xpost-media" id="postMedia"></div>
-                <p class="xpost-limited" id="postLimited" data-i18n="post.limited" hidden>non-follower reach limited</p>
-                <div class="xpost-actions">
-                  <span class="xpost-action xpost-action--blue" id="act-reply"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H10l-6 4z"></path></svg><span class="xpost-count">0</span></span>
-                  <span class="xpost-action xpost-action--green" id="act-repost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3L3 7l4 4M3 7h13a3 3 0 0 1 3 3v2M17 21l4-4-4-4M21 17H8a3 3 0 0 1-3-3v-2"></path></svg><span class="xpost-count">0</span></span>
-                  <span class="xpost-action xpost-action--pink" id="act-favorite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-8-4.6-8-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 8 2.4C20 15.4 12 20 12 20z"></path></svg><span class="xpost-count">0</span></span>
-                  <span class="xpost-action xpost-action--blue" id="act-views"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-7M10 20V4M15 20V9M20 20v-5"></path></svg><span class="xpost-count">0</span></span>
-                  <span class="xpost-action xpost-action--blue" id="act-bookmark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"></path></svg><span class="xpost-count">0</span></span>
-                  <span class="xpost-action xpost-action--blue" id="act-share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M4 14v7h16v-7"></path></svg><span class="xpost-count">0</span></span>
-                </div>
-              </div>
-            </article>
-
-            <div class="stats" id="stats">
-              <div class="stat"><span class="stat-label" data-i18n="stat.views">Views</span><span class="stat-value" id="statViews">-</span></div>
-              <div class="stat"><span class="stat-label" data-i18n="stat.verifiedViews">Verified follower views</span><span class="stat-value" id="statVerifiedViews">-</span></div>
-              <div class="stat"><span class="stat-label" data-i18n="stat.engagements">Engagements</span><span class="stat-value" id="statEngagements">-</span></div>
-              <div class="stat"><span class="stat-label" data-i18n="stat.followers">New followers</span><span class="stat-value" id="statFollowers">-</span></div>
-              <div class="stat"><span class="stat-label" data-i18n="stat.score">Score</span><span class="stat-value" id="statScore">-</span></div>
+        <div class="view" id="simView" hidden>
+          <article class="xpost" id="postCard">
+            <div class="xpost-avatar" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path class="filled" d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM3 22a9 9 0 0 1 18 0z"></path></svg>
             </div>
-
-            <section class="post-card">
-              <div class="post-score-row">
-                <span id="postScore" class="post-score-value">0.00</span>
-                <span id="postScoreLabel" class="post-score-label"></span>
+            <div class="xpost-body">
+              <div class="xpost-head">
+                <span class="xpost-name" data-i18n="post.name">You</span>
+                <span class="xpost-handle" data-i18n="post.handle">@you</span>
+                <span class="xpost-time" id="postTime"></span>
               </div>
-              <svg id="sparkline" viewBox="0 0 300 60" preserveAspectRatio="none" aria-hidden="true">
-                <line id="sparkZero" x1="0" x2="300" y1="58" y2="58"></line>
-                <polyline id="sparkPath" points=""></polyline>
-              </svg>
-              <div class="bar">
-                <span id="barPos" class="bar-seg bar-seg--pos"></span>
-                <span id="barNeg" class="bar-seg bar-seg--neg"></span>
-              </div>
-              <div id="postActions" class="post-actions"></div>
-            </section>
-
-            <div class="dock sim-bar">
-              <div class="clock">
-                <span class="clock-time" id="clockTime">0:00:00</span>
-                <div class="clock-bar"><div class="clock-fill" id="clockFill"></div></div>
-              </div>
-              <div class="sim-controls">
-                <div class="field sim-speed">
-                  <label for="speed"><span data-i18n="field.speed">Speed</span> <output id="speedValue">5×</output></label>
-                  <input type="range" id="speed" min="0" max="6" step="1" value="2">
-                </div>
-                <button id="editSettings" class="btn btn--secondary" data-i18n="button.settings">Edit settings</button>
-                <button id="run" class="btn btn--danger" data-i18n="button.stop">Stop simulation</button>
+              <p class="xpost-text" id="postText"></p>
+              <div class="xpost-media" id="postMedia"></div>
+              <p class="xpost-limited" id="postLimited" data-i18n="post.limited" hidden>non-follower reach limited</p>
+              <div class="xpost-actions">
+                <span class="xpost-action xpost-action--blue" id="act-reply"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H10l-6 4z"></path></svg><span class="xpost-count">0</span></span>
+                <span class="xpost-action xpost-action--green" id="act-repost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3L3 7l4 4M3 7h13a3 3 0 0 1 3 3v2M17 21l4-4-4-4M21 17H8a3 3 0 0 1-3-3v-2"></path></svg><span class="xpost-count">0</span></span>
+                <span class="xpost-action xpost-action--pink" id="act-favorite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-8-4.6-8-10.2A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 8 2.4C20 15.4 12 20 12 20z"></path></svg><span class="xpost-count">0</span></span>
+                <span class="xpost-action xpost-action--blue" id="act-views"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-7M10 20V4M15 20V9M20 20v-5"></path></svg><span class="xpost-count">0</span></span>
+                <span class="xpost-action xpost-action--blue" id="act-bookmark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"></path></svg><span class="xpost-count">0</span></span>
+                <span class="xpost-action xpost-action--blue" id="act-share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M4 14v7h16v-7"></path></svg><span class="xpost-count">0</span></span>
               </div>
             </div>
+          </article>
+
+          <div class="stats" id="stats">
+            <div class="stat"><span class="stat-label" data-i18n="stat.views">Views</span><span class="stat-value" id="statViews">-</span></div>
+            <div class="stat"><span class="stat-label" data-i18n="stat.verifiedViews">Verified follower views</span><span class="stat-value" id="statVerifiedViews">-</span></div>
+            <div class="stat"><span class="stat-label" data-i18n="stat.engagements">Engagements</span><span class="stat-value" id="statEngagements">-</span></div>
+            <div class="stat"><span class="stat-label" data-i18n="stat.followers">New followers</span><span class="stat-value" id="statFollowers">-</span></div>
+            <div class="stat"><span class="stat-label" data-i18n="stat.score">Score</span><span class="stat-value" id="statScore">-</span></div>
           </div>
 
-          <aside class="sidebar">
-            <section class="timeline">
-              <h2 class="section-title" data-i18n="section.timeline">Timeline</h2>
-              <ol id="timeline" class="timeline-list"></ol>
-            </section>
-          </aside>
+          <section class="post-card">
+            <div class="post-score-row">
+              <span id="postScore" class="post-score-value">0.00</span>
+              <span id="postScoreLabel" class="post-score-label"></span>
+            </div>
+            <svg id="sparkline" viewBox="0 0 300 60" preserveAspectRatio="none" aria-hidden="true">
+              <line id="sparkZero" x1="0" x2="300" y1="58" y2="58"></line>
+              <polyline id="sparkPath" points=""></polyline>
+            </svg>
+            <div class="bar">
+              <span id="barPos" class="bar-seg bar-seg--pos"></span>
+              <span id="barNeg" class="bar-seg bar-seg--neg"></span>
+            </div>
+            <div id="postActions" class="post-actions"></div>
+          </section>
+
+          <div class="dock sim-bar">
+            <div class="clock">
+              <span class="clock-time" id="clockTime">0:00:00</span>
+              <div class="clock-bar"><div class="clock-fill" id="clockFill"></div></div>
+            </div>
+            <div class="sim-controls">
+              <div class="field sim-speed">
+                <label for="speed"><span data-i18n="field.speed">Speed</span> <output id="speedValue">5×</output></label>
+                <input type="range" id="speed" min="0" max="6" step="1" value="2">
+              </div>
+              <button id="editSettings" class="btn btn--secondary" data-i18n="button.settings">Edit settings</button>
+              <button id="run" class="btn btn--danger" data-i18n="button.stop">Stop simulation</button>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- ============ WEIGHTS ============ -->
       <section id="panel-weights" class="panel" role="tabpanel" hidden>
-        <div class="layout">
-          <div class="column">
-            <div class="column-header"><h1 data-i18n="tab.weights">Weights</h1></div>
-            <div class="weights-layout" id="weightsRoot"></div>
-          </div>
-        </div>
+        <div class="weights-layout" id="weightsRoot"></div>
       </section>
     </main>
+
+    <aside class="sidebar" id="sidebar" hidden>
+      <section class="timeline">
+        <h2 class="section-title" data-i18n="section.timeline">Timeline</h2>
+        <ol id="timeline" class="timeline-list"></ol>
+      </section>
+    </aside>
   </div>
 
   <script src="app.js"></script>

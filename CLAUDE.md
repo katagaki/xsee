@@ -14,10 +14,10 @@ A static, single-page simulator of the X "For You" feed ranking algorithm. Weigh
 The UI mirrors X's own web client.
 
 - System font stack: `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`. Bold names and section titles (700/800), 15px body, 13px secondary text.
-- Layout: left navigation rail, 600px center column with side borders and a sticky blurred header, 350px right sidebar. Rail collapses to icons at 1280px, sidebar drops below the column at 1080px, rail becomes a top bar at 700px.
+- Layout: 600px center column with side borders and a sticky blurred header holding the title and X-style tabs (equal width, bold active label, rounded blue underline). A 350px right sidebar holds the timeline during a run and drops below the column at 1000px. No navigation rail.
 - All colors are CSS custom properties on `:root`, with a dark ("Lights out", pure black) override under `@media (prefers-color-scheme: dark)`. Light and dark must both work; never hardcode a themed color in a component rule.
 - Accent blue `#1d9bf0`, error red `#f4212e`, like pink `#f91880`, repost green `#00ba7c`.
-- Buttons are pills: primary is inverted (black in light, white in dark), secondary is outlined, danger is red. Nav items and the language picker are pills too.
+- Buttons are pills: primary is inverted (black in light, white in dark), secondary is outlined, danger is red.
 - Inputs: outlined field with the label inside, blue border and label on focus.
 - Media, link cards, and sidebar cards use 16px radius.
 - No decorative elements beyond what X itself shows; every visual element must carry information.
@@ -27,8 +27,8 @@ The UI mirrors X's own web client.
 
 ## Localization
 
-- English and Japanese, auto-detected from `navigator.language`, switchable via the header picker, persisted in `localStorage`.
-- All user-facing strings go through `t(key)` and live in `strings.json` under `en` and `ja`. Static markup uses `data-i18n` attributes; dynamic renders re-run on language switch.
+- English and Japanese, chosen from `navigator.language` only. There is no language picker.
+- All user-facing strings go through `t(key)` and live in `strings.json` under `en` and `ja`. Static markup uses `data-i18n` attributes.
 - Japanese terminology: "weights" is ウエイト (not 重み), "report" is 報告, follow X's own JP vocabulary for actions (いいね, リポスト, 引用).
 
 ## Code style

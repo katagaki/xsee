@@ -10,7 +10,7 @@ The simulator separates follower reach from non-follower recommendations. The fl
 
 The ranker's author and topic diversity steps are outside this single-post simulation.
 
-The UI follows the browser's light/dark preference and auto-detects English or Japanese, with a language picker in the header.
+The UI follows the browser's light/dark preference and shows English or Japanese based on the system language.
 
 ## Run
 
