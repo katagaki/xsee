@@ -2,6 +2,7 @@
   "en": {
     "tab.simulator": "Simulator",
     "tab.weights": "Weights",
+    "header.post": "Post",
     "section.account": "Account",
     "section.rates": "Negative feedback rates",
     "section.timeline": "Timeline",
@@ -126,6 +127,7 @@
   "ja": {
     "tab.simulator": "シミュレーター",
     "tab.weights": "ウエイト",
+    "header.post": "ポスト",
     "section.account": "アカウント",
     "section.rates": "ネガティブフィードバック率",
     "section.timeline": "タイムライン",

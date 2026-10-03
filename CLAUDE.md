@@ -11,14 +11,16 @@ A static, single-page simulator of the X "For You" feed ranking algorithm. Weigh
 
 ## Design system
 
-The UI follows a specific industrial design language. Do not name the design system it resembles anywhere in code, comments, or copy — no references to its vendor or brand.
+The UI mirrors X's own web client.
 
-- Sans-serif only: `"Helvetica Neue", Helvetica, Arial, sans-serif`.
-- Sharp corners everywhere; no border-radius except circular slider thumbs.
-- All colors are CSS custom properties on `:root`, with a dark palette override under `@media (prefers-color-scheme: dark)`. Light and dark must both work; never hardcode a themed color in a component rule.
-- Interactive blue `#0f62fe`, error red `#da1e28` (light) / `#fa4d56` (dark), layered gray surfaces (`--bg`, `--layer`, `--field`).
-- Inputs: filled field with a single bottom border. Buttons: rectangular, left-aligned text, 48px tall.
-- No decorative elements: no eyebrows, pills, badges, or leading-edge color bars. Every visual element must carry information.
+- System font stack: `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`. Bold names and section titles (700/800), 15px body, 13px secondary text.
+- Layout: left navigation rail, 600px center column with side borders and a sticky blurred header, 350px right sidebar. Rail collapses to icons at 1280px, sidebar drops below the column at 1080px, rail becomes a top bar at 700px.
+- All colors are CSS custom properties on `:root`, with a dark ("Lights out", pure black) override under `@media (prefers-color-scheme: dark)`. Light and dark must both work; never hardcode a themed color in a component rule.
+- Accent blue `#1d9bf0`, error red `#f4212e`, like pink `#f91880`, repost green `#00ba7c`.
+- Buttons are pills: primary is inverted (black in light, white in dark), secondary is outlined, danger is red. Nav items and the language picker are pills too.
+- Inputs: outlined field with the label inside, blue border and label on focus.
+- Media, link cards, and sidebar cards use 16px radius.
+- No decorative elements beyond what X itself shows; every visual element must carry information.
 - No `cursor: pointer` anywhere; anchors get `cursor: default` explicitly.
 - `user-select: none` on the body; only editable inputs re-enable selection.
 - Keep the UI light on prose. Prefer numbers, labels, and bars over sentences.
