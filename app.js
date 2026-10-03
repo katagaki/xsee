@@ -531,33 +531,26 @@ function renderWeights() {
   for (const group of groups) {
     const maxAbs = Math.max(...group.rows.map((r) => Math.abs(r.value)), 1e-9);
     const section = document.createElement("section");
-    section.className = "weights-group";
+    section.className = "card weights-group";
 
     const h = document.createElement("h2");
+    h.className = "section-title";
     h.textContent = group.title;
     section.append(h);
 
-    const table = document.createElement("table");
-    table.className = "wtable";
-    const thead = document.createElement("thead");
-    const headRow = document.createElement("tr");
-    for (const text of [t("weights.colAction"), "", t("weights.colWeight")]) {
-      const th = document.createElement("th");
-      th.textContent = text;
-      if (text === "") th.className = "wbar-cell";
-      headRow.append(th);
-    }
-    thead.append(headRow);
-    const tbody = document.createElement("tbody");
-
+    const list = document.createElement("ol");
+    list.className = "wlist";
     const sorted = [...group.rows].sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
     for (const row of sorted) {
-      const tr = document.createElement("tr");
-      const name = document.createElement("td");
+      const li = document.createElement("li");
+      li.className = "wrow";
+      const name = document.createElement("span");
+      name.className = "wrow-name";
       name.textContent = t(group.prefix + row.key);
+      const num = document.createElement("span");
+      num.className = "wrow-value" + (row.value < 0 ? " wrow-value--neg" : "");
+      num.textContent = fmt(row.value, Math.abs(row.value) < 0.1 && row.value !== 0 ? 3 : 2);
 
-      const barCell = document.createElement("td");
-      barCell.className = "wbar-cell";
       const wbar = document.createElement("div");
       wbar.className = "wbar";
       const fill = document.createElement("div");
@@ -565,16 +558,11 @@ function renderWeights() {
       // sqrt scale keeps small weights visible next to Report at -234.
       fill.style.width = (Math.sqrt(Math.abs(row.value) / maxAbs) * 100).toFixed(1) + "%";
       wbar.append(fill);
-      barCell.append(wbar);
 
-      const num = document.createElement("td");
-      num.className = "num";
-      num.textContent = fmt(row.value, Math.abs(row.value) < 0.1 && row.value !== 0 ? 3 : 2);
-      tr.append(name, barCell, num);
-      tbody.append(tr);
+      li.append(name, num, wbar);
+      list.append(li);
     }
-    table.append(thead, tbody);
-    section.append(table);
+    section.append(list);
 
     const note = document.createElement("p");
     note.className = "wnote";

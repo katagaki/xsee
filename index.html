@@ -11,7 +11,6 @@
     <header class="column-header">
       <div class="column-header-top">
         <span class="brand">X Simulator</span>
-        <a class="header-link" href="https://x.com/i/jf/under_the_hood" target="_blank" rel="noopener">Under the Hood</a>
       </div>
       <nav class="tabs" role="tablist">
         <button class="tab tab--active" role="tab" aria-selected="true" data-tab="simulator"><span data-i18n="tab.simulator">Simulator</span></button>
@@ -180,10 +179,13 @@
         <h2 class="section-title" data-i18n="section.timeline">Timeline</h2>
         <ol id="timeline" class="timeline-list"></ol>
       </section>
-      <section class="card weights-card" id="panel-weights" role="tabpanel">
-        <h2 class="section-title" data-i18n="tab.weights">Weights</h2>
-        <div id="weightsRoot"></div>
-      </section>
+      <div class="weights" id="panel-weights" role="tabpanel">
+        <div class="weights-root" id="weightsRoot"></div>
+      </div>
+      <nav class="sidebar-footer">
+        <a href="https://x.com/i/jf/under_the_hood" target="_blank" rel="noopener">Under the Hood</a>
+        <a href="https://github.com/xai-org/x-algorithm/blob/bf7db1becb6590152fba79b8c3bf0555752f7b14/home-mixer/params/param.rs" target="_blank" rel="noopener">xai-org/x-algorithm</a>
+      </nav>
     </aside>
   </div>
 
