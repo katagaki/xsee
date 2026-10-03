@@ -553,7 +553,6 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--focus); outline-
   border-top: 1px solid var(--border-subtle);
   font-variant-numeric: tabular-nums;
 }
-.wtable tbody tr:hover { background: var(--hover); }
 .wtable td.num { text-align: right; white-space: nowrap; font-weight: 700; }
 .wbar-cell { width: 35%; }
 .wbar { height: 8px; border-radius: 4px; background: var(--field); overflow: hidden; }
