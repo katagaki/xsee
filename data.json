@@ -60,7 +60,7 @@
   ],
   "weights": {
     "positive": [
-      { "key": "favorite",      "value": 0.6 },
+      { "key": "favorite",      "value": 0.66 },
       { "key": "reply",         "value": 5.0 },
       { "key": "retweet",       "value": 1.0 },
       { "key": "quote",         "value": 5.0 },
@@ -81,7 +81,7 @@
     "negative": [
       { "key": "notDwelled",    "value": -0.02 },
       { "key": "blockAuthor",   "value": -31.2 },
-      { "key": "notInterested", "value": -47.52 },
+      { "key": "notInterested", "value": -52.272 },
       { "key": "muteAuthor",    "value": -58.8 },
       { "key": "report",        "value": -234.0 }
     ],
