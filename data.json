@@ -60,18 +60,18 @@
   ],
   "weights": {
     "positive": [
-      { "key": "favorite",      "value": 0.66 },
+      { "key": "favorite",      "value": 0.708 },
       { "key": "reply",         "value": 5.0 },
       { "key": "retweet",       "value": 1.0 },
       { "key": "quote",         "value": 5.0 },
-      { "key": "share",         "value": 2.0 },
+      { "key": "share",         "value": 2.118 },
       { "key": "shareDm",       "value": 5.0 },
-      { "key": "shareCopyLink", "value": 20.0 },
+      { "key": "shareCopyLink", "value": 0.0 },
       { "key": "followAuthor",  "value": 4.0 },
-      { "key": "click",         "value": 0.3 },
+      { "key": "click",         "value": 0.274 },
       { "key": "openLink",      "value": 0.2 },
       { "key": "photoExpand",   "value": 0.05 },
-      { "key": "videoOpen",     "value": 0.02 },
+      { "key": "videoOpen",     "value": 0.0 },
       { "key": "vqv",           "value": 0.0 },
       { "key": "quotedClick",   "value": 0.05 },
       { "key": "quotedVqv",     "value": 0.0 },
@@ -81,7 +81,7 @@
     "negative": [
       { "key": "notDwelled",    "value": -0.02 },
       { "key": "blockAuthor",   "value": -31.2 },
-      { "key": "notInterested", "value": -52.272 },
+      { "key": "notInterested", "value": -53.07 },
       { "key": "muteAuthor",    "value": -58.8 },
       { "key": "report",        "value": -234.0 }
     ],
@@ -93,8 +93,8 @@
       { "key": "authorDecay",    "value": 0.5 },
       { "key": "authorFloor",    "value": 0.25 },
       { "key": "unexplored",     "value": 0.015 },
-      { "key": "contDwellTime",  "value": 0.006 },
-      { "key": "contClickDwellTime", "value": 0.4 }
+      { "key": "contDwellTime",  "value": 0.0075 },
+      { "key": "contClickDwellTime", "value": 0.385 }
     ],
     "inactive": [
       { "key": "multUnexploredAlpha", "value": 0.0 },
